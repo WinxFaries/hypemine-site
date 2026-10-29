@@ -3911,6 +3911,23 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 .hm-founder-badge{width:21px;height:21px;flex:0 0 21px;border-radius:50%;background:#3897f0;color:white;font-size:14px;font-weight:900;line-height:1;box-shadow:0 0 0 2px rgba(56,151,240,.16),0 2px 9px rgba(56,151,240,.28)}
 @media(max-width:600px){.profile-avatar-status{max-width:150px;font-size:9px}}
 </style>
+<style id="hm-profile-editor-style">
+.hm-profile-editor-overlay{position:fixed;inset:0;z-index:100010;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(3,4,10,.76);backdrop-filter:blur(12px)}
+.hm-profile-editor-overlay.active{display:flex;animation:hmProfileEditorFade .18s ease-out}
+.hm-profile-editor{position:relative;width:min(480px,100%);padding:30px;border:1px solid rgba(155,129,255,.32);border-radius:22px;background:radial-gradient(ellipse at 90% 0%,rgba(124,92,255,.18),transparent 46%),#11131c;box-shadow:0 28px 100px rgba(0,0,0,.55),0 0 60px rgba(124,92,255,.12)}
+.hm-profile-editor-close{position:absolute;right:14px;top:14px;width:34px;height:34px;border:1px solid var(--border);border-radius:10px;color:#c5c9d4;background:#191c27;font-size:22px}
+.hm-profile-editor-kicker{color:#a99aff;font-size:9px;font-weight:900;letter-spacing:1.8px}
+.hm-profile-editor h2{margin:10px 0 0;font-size:24px;letter-spacing:-.7px}
+.hm-profile-editor-copy{margin:8px 0 22px;color:var(--muted);font-size:12px;line-height:1.6}
+.hm-profile-editor-field{display:block;color:#dce0ec;font-size:11px;font-weight:800}
+.hm-profile-editor-field input{display:block;width:100%;height:44px;margin-top:8px;padding:0 12px;border:1px solid var(--border);border-radius:10px;color:#fff;background:#0c0e15;outline:none}
+.hm-profile-editor-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,255,.12)}
+.hm-profile-edit-status{margin-top:12px;color:#9ba5b9;font-size:11px;line-height:1.5}.hm-profile-edit-status.error{color:#ff8196}
+.hm-profile-editor-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
+.hm-profile-password-link{margin-top:18px;padding:0;border:0;background:none;color:#9d8bff;font-size:10px;text-decoration:underline;cursor:pointer}
+@keyframes hmProfileEditorFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:480px){.hm-profile-editor{padding:25px 20px}.hm-profile-editor-actions{flex-direction:column-reverse}.hm-profile-editor-actions .btn{width:100%}}
+</style>
 </head>
 
 
@@ -9631,12 +9648,45 @@ async function requestPasswordReset(){
  if(error){setAuthStatus(authErrorMessage(error),"error");return;}
  setAuthStatus("Если аккаунт с такой почтой существует, письмо для сброса пароля уже отправлено.","success");
 }
-async function editProfile(){
- const account=getAccount();if(!account){openAuthModal("register");return;}
- const client=window.hmSupabaseClient;if(!client){setAuthStatus("Сервис авторизации ещё загружается.");return;}
+function editProfile(){
+ const account=getAccount();if(!account){openAuthModal("login");return;}
+ const input=document.getElementById("hmProfileDisplayName");
+ if(input)input.value=account.name||"";
+ const status=document.getElementById("hmProfileEditStatus");if(status){status.hidden=true;status.textContent="";status.classList.remove("error");}
+ const modal=document.getElementById("hmProfileEditor");if(!modal)return;
+ modal.classList.add("active");modal.setAttribute("aria-hidden","false");
+ setTimeout(()=>input?.focus(),40);
+}
+function closeProfileEditor(){
+ const modal=document.getElementById("hmProfileEditor");if(!modal)return;
+ modal.classList.remove("active");modal.setAttribute("aria-hidden","true");
+}
+async function saveProfileChanges(event){
+ event.preventDefault();
+ const account=getAccount(),client=window.hmSupabaseClient,input=document.getElementById("hmProfileDisplayName"),button=document.getElementById("hmProfileSave"),status=document.getElementById("hmProfileEditStatus");
+ if(!account){closeProfileEditor();openAuthModal("login");return;}
+ const name=(input?.value||"").trim();
+ const show=(message,error=false)=>{if(status){status.textContent=message;status.hidden=false;status.classList.toggle("error",error);}};
+ if(name.length<2||name.length>32){show("Никнейм должен содержать от 2 до 32 символов.",true);return;}
+ if(button){button.disabled=true;button.textContent="Сохраняем…";}
+ try{
+  if(!client)throw new Error("Сервис профиля пока недоступен. Обнови страницу.");
+  const {data,error}=await client.auth.updateUser({data:{username:name}});
+  if(error)throw error;
+  if(data?.user)window.hmSupabaseUser=data.user;
+  loadProfile();closeProfileEditor();
+ }catch(error){show(authErrorMessage(error),"error");}
+ finally{if(button){button.disabled=false;button.textContent="Сохранить изменения";}}
+}
+async function sendProfilePasswordReset(){
+ const account=getAccount(),client=window.hmSupabaseClient,status=document.getElementById("hmProfileEditStatus");
+ if(!account){closeProfileEditor();openAuthModal("login");return;}
+ const show=(message,error=false)=>{if(status){status.textContent=message;status.hidden=false;status.classList.toggle("error",error);}};
+ if(!client){show("Сервис авторизации пока недоступен.",true);return;}
+ show("Отправляем ссылку для смены пароля…");
  const {error}=await client.auth.resetPasswordForEmail(account.email,{redirectTo:window.location.origin+window.location.pathname});
- if(error){openAuthModal("login");setAuthStatus(authErrorMessage(error),"error");return;}
- openAuthModal("login");setAuthStatus("Если почта подтверждена, на неё отправлена ссылка для смены пароля.","success");
+ if(error){show(authErrorMessage(error),true);return;}
+ show("Ссылка для смены пароля отправлена на "+account.email+".");
 }
 
 
@@ -9720,7 +9770,7 @@ function loadProfile(){
  const nick=document.getElementById("profileNickField"),mail=document.getElementById("profileEmailField"),id=document.getElementById("profileIdField"),since=document.getElementById("profileSince");
  if(nick)nick.textContent=safeName;if(mail)mail.textContent=account.email||"—";if(id)id.textContent=account.id||"—";
  if(since)since.textContent=account.createdAt?"Участник с "+new Date(account.createdAt).toLocaleDateString("ru-RU"):"Участник HypeMine";
- if(login)login.style.display="none";if(edit){edit.style.display="inline-flex";edit.textContent="🔐 Сменить пароль";}if(logout)logout.style.display="inline-flex";
+ if(login)login.style.display="none";if(edit){edit.style.display="inline-flex";edit.textContent="✏️ Настроить профиль";}if(logout)logout.style.display="inline-flex";
  const admin=document.getElementById("adminPanel");if(admin)admin.style.display="none";
 }
 
@@ -10382,6 +10432,8 @@ if(e.key==="Escape"){
 
 closeModal();
 
+closeProfileEditor();
+
 
 
 }
@@ -10921,6 +10973,7 @@ applyAmbientStyle();
 
 
 
+<div id="hmProfileEditor" class="hm-profile-editor-overlay" aria-hidden="true" onclick="if(event.target===this)closeProfileEditor()"><section class="hm-profile-editor" role="dialog" aria-modal="true" aria-labelledby="hmProfileEditorTitle"><button class="hm-profile-editor-close" type="button" aria-label="Закрыть" onclick="closeProfileEditor()">×</button><div class="hm-profile-editor-kicker">HYPEMINE ACCOUNT</div><h2 id="hmProfileEditorTitle">Настройки профиля</h2><p class="hm-profile-editor-copy">Измени отображаемый никнейм или выбери фото профиля.</p><form onsubmit="saveProfileChanges(event)"><label class="hm-profile-editor-field">Никнейм<input id="hmProfileDisplayName" type="text" minlength="2" maxlength="32" autocomplete="nickname" required></label><div id="hmProfileEditStatus" class="hm-profile-edit-status" role="status" aria-live="polite" hidden></div><div class="hm-profile-editor-actions"><button type="button" class="btn" onclick="closeProfileEditor();changeAvatar()">📷 Выбрать фото</button><button id="hmProfileSave" type="submit" class="btn btn-primary">Сохранить изменения</button></div><button type="button" class="hm-profile-password-link" onclick="sendProfilePasswordReset()">Отправить ссылку для смены пароля</button></form></section></div>
 <div id="hmAuthModal" class="hm-auth-overlay" aria-hidden="true" onclick="if(event.target===this)closeAuthModal()"><section class="hm-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="hmAuthTitle"><button class="hm-auth-close" type="button" aria-label="Закрыть" onclick="closeAuthModal()">×</button><div class="hm-auth-visual"><div class="hm-auth-orbit hm-auth-orbit-a"></div><div class="hm-auth-orbit hm-auth-orbit-b"></div><div class="hm-auth-logo">HM</div><span class="hm-auth-kicker">HYPEMINE ACCOUNT</span><h2 id="hmAuthTitle">Твоя игровая зона</h2><p>Собирай любимые карты, моды и шейдеры в одном месте.</p><div class="hm-auth-mini-stats"><span>✦ Твоя коллекция</span><span>⌁ Настройки профиля</span></div></div><div class="hm-auth-form-wrap"><div id="hmAuthTabs" class="hm-auth-tabs"><button id="hmAuthTabLogin" type="button" onclick="setAuthMode('login')">Вход</button><button id="hmAuthTabRegister" type="button" onclick="setAuthMode('register')">Регистрация</button></div><h3 id="hmAuthHeading">Создай свой профиль</h3><p id="hmAuthSubheading">Подтверди почту, чтобы защитить свой аккаунт.</p><form id="hmAuthForm" class="hm-auth-form" onsubmit="handleAuthSubmit(event)"><label id="hmAuthEmailField" class="hm-auth-field">Электронная почта<input id="hmAuthEmail" type="email" autocomplete="email" placeholder="name@example.com" maxlength="254" required></label><label id="hmAuthNameField" class="hm-auth-field">Имя пользователя<input id="hmAuthName" type="text" autocomplete="nickname" placeholder="Твой никнейм" minlength="2" maxlength="32" required></label><label id="hmAuthPasswordLabel" class="hm-auth-field">Пароль<input id="hmAuthPassword" type="password" autocomplete="new-password" placeholder="Не менее 8 символов" minlength="8" maxlength="128" required></label><button id="hmAuthForgot" class="hm-auth-forgot" type="button" onclick="requestPasswordReset()" hidden>Забыли пароль?</button><div id="hmAuthStatus" class="hm-auth-status" role="status" aria-live="polite" hidden></div><button id="hmAuthSubmit" class="hm-auth-submit" type="submit">Создать аккаунт</button></form><p id="hmAuthSecureNote" class="hm-auth-secure-note"><span>🔒</span><span>Пароль проверяет Supabase Auth; сайт не записывает его в свой профиль.</span></p><button class="hm-auth-later" type="button" onclick="closeAuthModal()">Продолжить как гость</button></div></section></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
