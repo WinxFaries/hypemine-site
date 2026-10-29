@@ -3902,6 +3902,15 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 .hype-spotlight{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:20px;margin:18px 0 22px;padding:22px 24px;border:1px solid rgba(157,113,255,.32);border-radius:17px;background:radial-gradient(ellipse at 90% 10%,rgba(124,92,255,.22),transparent 48%),linear-gradient(120deg,#151320,#10141d 65%,#19132a);box-shadow:0 12px 35px rgba(0,0,0,.15)}.hype-spotlight-copy{position:relative;z-index:1;min-width:0}.hype-spotlight-kicker{font-size:10px;letter-spacing:1.7px;text-transform:uppercase;color:#bca7ff;font-weight:900}.hype-spotlight h3{font-size:21px;margin:7px 0 6px}.hype-spotlight p{color:var(--muted);font-size:12px;line-height:1.6;margin:0;max-width:520px}.hype-spotlight .spotlight-action{flex-shrink:0;border:1px solid rgba(185,157,255,.35);border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6d4aff);color:white;padding:11px 15px;font-weight:900;cursor:pointer}.hype-spotlight .spotlight-icon{font-size:46px;filter:drop-shadow(0 0 18px rgba(155,115,255,.3));margin-right:4px}.hype-spotlight-inner{display:flex;align-items:center;gap:16px}@media(max-width:600px){.hype-spotlight{align-items:flex-start;flex-direction:column;padding:18px}.hype-spotlight h3{font-size:18px}.hype-spotlight-inner{align-items:flex-start}.hype-spotlight .spotlight-icon{font-size:34px}.hype-spotlight .spotlight-action{width:100%}}
 </style>
 
+<style id="hm-profile-avatar-founder">
+.profile-avatar-wrap{position:relative}
+.profile-avatar-wrap .big-avatar{overflow:hidden;background-size:cover!important;background-position:center!important;background-repeat:no-repeat}
+.profile-avatar-wrap .avatar-edit{display:none;align-items:center;justify-content:center;width:38px;height:38px;border:2px solid #121522;border-radius:50%;font-size:17px;background:linear-gradient(135deg,#8b5cf6,#6740df);box-shadow:0 5px 18px rgba(101,72,220,.38)}
+.profile-avatar-status{position:absolute;left:50%;top:calc(100% + 10px);transform:translateX(-50%);width:max-content;max-width:220px;color:#a8b2c5;text-align:center;font-size:10px;line-height:1.4}
+.profile-avatar-status.error{color:#ff8196}
+.hm-founder-badge{width:21px;height:21px;flex:0 0 21px;border-radius:50%;background:#3897f0;color:white;font-size:14px;font-weight:900;line-height:1;box-shadow:0 0 0 2px rgba(56,151,240,.16),0 2px 9px rgba(56,151,240,.28)}
+@media(max-width:600px){.profile-avatar-status{max-width:150px;font-size:9px}}
+</style>
 </head>
 
 
@@ -5032,9 +5041,9 @@ class="track-list"
 
     <div class="big-avatar" id="profileAvatar">👤</div>
 
-    <button class="avatar-edit" onclick="changeAvatar()" title="Установить своё фото">✕</button>
+    <button class="avatar-edit" onclick="changeAvatar()" title="Выбрать фото из галереи" aria-label="Выбрать фото профиля">📷</button>
 
-    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarFile(event)">
+    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarFile(event)"><span id="profileAvatarStatus" class="profile-avatar-status" role="status" aria-live="polite" hidden></span>
 
   </div>
 
@@ -5044,7 +5053,7 @@ class="track-list"
 
     <div class="profile-online"><span></span> Онлайн</div>
 
-    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><h2 id="profileName" style="font-size:24px;margin:0">Гость</h2><span id="profileVerifiedBadge" class="youtube-verified" style="display:none" title="Подтверждённый аккаунт">✓</span></div>
+    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><h2 id="profileName" style="font-size:24px;margin:0">Гость</h2><span id="profileVerifiedBadge" class="youtube-verified hm-founder-badge" style="display:none" title="Первый зарегистрированный пользователь HypeMine Builds — подтверждённый аккаунт" aria-label="Первый зарегистрированный пользователь — подтверждённый аккаунт">✓</span></div>
 
     <p id="profileEmail" class="subtitle">Аккаунт не зарегистрирован</p>
 
@@ -9632,8 +9641,35 @@ async function editProfile(){
 
 
 
-function changeAvatar(){setAuthStatus("Загрузка аватара появится после настройки защищённого хранения файлов.","info");}
-function handleAvatarFile(){return;}
+function changeAvatar(){
+ const account=getAccount();
+ if(!account){openAuthModal("login");return;}
+ const input=document.getElementById("avatarFileInput");
+ if(input)input.click();
+}
+async function handleAvatarFile(event){
+ const input=event?.target,file=input?.files?.[0];if(!file)return;
+ const status=document.getElementById("profileAvatarStatus");
+ const show=(message,error=false)=>{if(status){status.textContent=message;status.hidden=false;status.classList.toggle("error",error);}};
+ try{
+  if(!file.type.startsWith("image/"))throw new Error("Выбери изображение из галереи.");
+  if(file.size>15*1024*1024)throw new Error("Файл слишком большой. Максимальный размер — 15 МБ.");
+  const source=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Не удалось прочитать изображение."));reader.readAsDataURL(file);});
+  const image=new Image();image.src=source;await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error("Не удалось открыть это изображение."));});
+  const side=320,canvas=document.createElement("canvas");canvas.width=side;canvas.height=side;
+  const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Браузер не смог обработать изображение.");
+  const crop=Math.min(image.naturalWidth,image.naturalHeight),sx=(image.naturalWidth-crop)/2,sy=(image.naturalHeight-crop)/2;
+  ctx.drawImage(image,sx,sy,crop,crop,0,0,side,side);
+  let avatarUrl=canvas.toDataURL("image/webp",.82);if(!avatarUrl.startsWith("data:image/webp"))avatarUrl=canvas.toDataURL("image/jpeg",.82);
+  show("Сохраняем фото профиля…");
+  const client=window.hmSupabaseClient;if(!client)throw new Error("Сервис профиля пока недоступен. Обнови страницу и попробуй ещё раз.");
+  const {data,error}=await client.auth.updateUser({data:{avatar_url:avatarUrl,avatar_type:"image"}});
+  if(error)throw error;
+  if(data?.user)window.hmSupabaseUser=data.user;
+  loadProfile();show("Фото профиля обновлено.");
+ }catch(error){show(error.message||"Не удалось сохранить фото.",true);}
+ finally{if(input)input.value="";}
+}
 async function logoutProfile(){
  const client=window.hmSupabaseClient;if(!client)return;
  const button=document.getElementById("profileLogoutBtn");if(button)button.disabled=true;
@@ -9651,13 +9687,14 @@ function loadProfile(){
  if(hudHint)hudHint.textContent=account?(account.emailVerified?"Почта подтверждена":"Почта ожидает подтверждения"):"Войди, чтобы пользоваться профилем на этом устройстве";
  if(hudMeter)hudMeter.style.width=account?"100%":"18%";if(hudProgress)hudProgress.textContent=account?"100%":"18%";
  const name=document.getElementById("profileName"),email=document.getElementById("profileEmail"),avatar=document.getElementById("profileAvatar"),login=document.getElementById("profileLoginBtn"),edit=document.getElementById("profileEditBtn"),logout=document.getElementById("profileLogoutBtn"),verifiedBadge=document.getElementById("profileVerifiedBadge"),miniName=document.getElementById("miniName"),miniAvatar=document.getElementById("miniAvatar"),avatarEdit=document.querySelector(".profile-main-card .avatar-edit");
- if(verifiedBadge)verifiedBadge.style.display=account?.emailVerified?"inline-flex":"none";
- if(avatarEdit)avatarEdit.style.display="none";
+ if(verifiedBadge)verifiedBadge.style.display=account&&window.hmFounderVerified===true?"inline-flex":"none";
+ if(avatarEdit)avatarEdit.style.display=account?"inline-flex":"none";
  if(!account){
   if(miniName)miniName.textContent="Гость";
   if(name)name.textContent="Гость";if(email)email.textContent="Аккаунт не зарегистрирован";
   if(avatar){avatar.textContent="👤";avatar.style.backgroundImage="";}
   if(miniAvatar){miniAvatar.textContent="👤";miniAvatar.style.backgroundImage="";}
+  const avatarStatus=document.getElementById("profileAvatarStatus");if(avatarStatus){avatarStatus.hidden=true;avatarStatus.textContent="";}
   const since=document.getElementById("profileSince");if(since)since.textContent="Новый пользователь";
   const nick=document.getElementById("profileNickField"),mail=document.getElementById("profileEmailField"),id=document.getElementById("profileIdField");
   if(nick)nick.textContent="Гость";if(mail)mail.textContent="—";if(id)id.textContent="—";
@@ -10878,6 +10915,14 @@ applyAmbientStyle();
 <div id="hmAuthModal" class="hm-auth-overlay" aria-hidden="true" onclick="if(event.target===this)closeAuthModal()"><section class="hm-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="hmAuthTitle"><button class="hm-auth-close" type="button" aria-label="Закрыть" onclick="closeAuthModal()">×</button><div class="hm-auth-visual"><div class="hm-auth-orbit hm-auth-orbit-a"></div><div class="hm-auth-orbit hm-auth-orbit-b"></div><div class="hm-auth-logo">HM</div><span class="hm-auth-kicker">HYPEMINE ACCOUNT</span><h2 id="hmAuthTitle">Твоя игровая зона</h2><p>Собирай любимые карты, моды и шейдеры в одном месте.</p><div class="hm-auth-mini-stats"><span>✦ Твоя коллекция</span><span>⌁ Настройки профиля</span></div></div><div class="hm-auth-form-wrap"><div id="hmAuthTabs" class="hm-auth-tabs"><button id="hmAuthTabLogin" type="button" onclick="setAuthMode('login')">Вход</button><button id="hmAuthTabRegister" type="button" onclick="setAuthMode('register')">Регистрация</button></div><h3 id="hmAuthHeading">Создай свой профиль</h3><p id="hmAuthSubheading">Подтверди почту, чтобы защитить свой аккаунт.</p><form id="hmAuthForm" class="hm-auth-form" onsubmit="handleAuthSubmit(event)"><label id="hmAuthEmailField" class="hm-auth-field">Электронная почта<input id="hmAuthEmail" type="email" autocomplete="email" placeholder="name@example.com" maxlength="254" required></label><label id="hmAuthNameField" class="hm-auth-field">Имя пользователя<input id="hmAuthName" type="text" autocomplete="nickname" placeholder="Твой никнейм" minlength="2" maxlength="32" required></label><label id="hmAuthPasswordLabel" class="hm-auth-field">Пароль<input id="hmAuthPassword" type="password" autocomplete="new-password" placeholder="Не менее 8 символов" minlength="8" maxlength="128" required></label><button id="hmAuthForgot" class="hm-auth-forgot" type="button" onclick="requestPasswordReset()" hidden>Забыли пароль?</button><div id="hmAuthStatus" class="hm-auth-status" role="status" aria-live="polite" hidden></div><button id="hmAuthSubmit" class="hm-auth-submit" type="submit">Создать аккаунт</button></form><p id="hmAuthSecureNote" class="hm-auth-secure-note"><span>🔒</span><span>Пароль проверяет Supabase Auth; сайт не записывает его в свой профиль.</span></p><button class="hm-auth-later" type="button" onclick="closeAuthModal()">Продолжить как гость</button></div></section></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+window.hmFounderVerified=false;
+async function refreshHmFounderBadge(){
+ const client=window.hmSupabaseClient,user=window.hmSupabaseUser;
+ if(!client||!user){window.hmFounderVerified=false;loadProfile();return;}
+ try{const {data,error}=await client.rpc("is_site_founder");window.hmFounderVerified=!error&&data===true;}
+ catch(_){window.hmFounderVerified=false;}
+ loadProfile();
+}
 (function(){
  const SUPABASE_URL="https://gvzhfxmrqykhlvmlnqgw.supabase.co";
  const SUPABASE_PUBLISHABLE_KEY="sb_publishable_SCp_QAN2EYOt4d_AXIcoMA_bg2-saai";
@@ -10887,13 +10932,13 @@ applyAmbientStyle();
   window.hmSupabaseUser=null;
   window.hmSupabaseClient.auth.onAuthStateChange((event,session)=>{
    window.hmSupabaseUser=session?.user||null;
-   loadProfile();
+   setTimeout(()=>refreshHmFounderBadge(),0);
    if(event==="PASSWORD_RECOVERY")openAuthModal("recovery");
    if(event==="SIGNED_IN"&&hmAuthMode!=="recovery")closeAuthModal();
   });
   window.hmSupabaseClient.auth.getSession().then(({data,error})=>{
    if(error){console.error("Supabase session init failed",error);return;}
-   window.hmSupabaseUser=data.session?.user||null;loadProfile();
+   window.hmSupabaseUser=data.session?.user||null;refreshHmFounderBadge();
   });
  }catch(error){
   window.hmSupabaseClient=null;
