@@ -3737,6 +3737,25 @@ RESPONSIVE
 @media(max-width:720px){.hm-entry-layout{width:calc(100vw - 28px);min-height:calc(100vh - 28px);grid-template-columns:1fr;gap:0;padding:58px 26px 112px;border-radius:22px}.hm-entry-copy{align-self:end}.hm-entry-title{font-size:clamp(38px,11vw,58px);letter-spacing:-2.2px}.hm-entry-sub{font-size:12px}.hm-entry-pills{margin-top:16px}.hm-entry-visual{min-height:250px;grid-row:1}.hm-entry-visual:before{width:200px;height:200px}.hm-entry-orbit.one{width:230px;height:126px}.hm-entry-orbit.two{width:190px;height:250px}.hm-entry-orbit.three{width:165px;height:165px}.hm-entry-cube{width:145px;height:145px}.hm-entry-skip{top:18px;right:18px}.hm-entry-bottom{left:26px;right:26px;bottom:24px}}
 @media(max-width:420px){.hm-entry-layout{padding-left:20px;padding-right:20px}.hm-entry-visual{min-height:210px}.hm-entry-cube{width:124px;height:124px}.hm-entry-pills span{padding:7px 9px;font-size:9px}.hm-entry-bottom{left:20px;right:20px}}
 @media(prefers-reduced-motion:reduce){#hmEntryLoader,.hm-entry-layout,.hm-entry-visual:before,.hm-entry-orbit,.hm-entry-cube,.hm-entry-voxel,.hm-entry-star,.hm-entry-status:before{animation:none!important;transition:none!important}}
+/* Persistent, user-selectable HypeMine ambience */
+.app{position:relative;z-index:1}
+.hm-ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:.82;isolation:isolate;transition:opacity .7s ease}
+.hm-ambient:before{content:"";position:absolute;inset:-20%;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.025),transparent 55%);animation:hmAmbientBreath 12s ease-in-out infinite alternate}
+.hm-ambient-stars{position:absolute;inset:-35%;opacity:.28;background-image:radial-gradient(1.5px 1.5px at 25px 35px,rgba(255,255,255,.8) 50%,transparent 100%),radial-gradient(1px 1px at 90px 110px,rgba(193,210,255,.8) 50%,transparent 100%),radial-gradient(1px 1px at 160px 65px,rgba(255,255,255,.55) 50%,transparent 100%);background-size:210px 170px,270px 230px,330px 290px;animation:hmAmbientStars 85s linear infinite}
+.hm-ambient-glow{position:absolute;width:min(58vw,850px);height:min(42vw,620px);border-radius:50%;filter:blur(105px);opacity:.32;will-change:transform;mix-blend-mode:screen}
+.hm-ambient-glow.a{left:-18%;top:-28%;background:radial-gradient(ellipse,var(--hm-ambient-a),transparent 68%);animation:hmAmbientFloatA 19s ease-in-out infinite alternate}
+.hm-ambient-glow.b{right:-22%;top:5%;width:min(52vw,730px);height:min(50vw,700px);background:radial-gradient(ellipse,var(--hm-ambient-b),transparent 70%);animation:hmAmbientFloatB 23s ease-in-out infinite alternate}
+.hm-ambient-glow.c{left:28%;bottom:-42%;width:min(62vw,900px);height:min(38vw,560px);background:radial-gradient(ellipse,var(--hm-ambient-c),transparent 68%);animation:hmAmbientFloatC 26s ease-in-out infinite alternate}
+.hm-ambient-ribbon{position:absolute;left:-20%;top:31%;width:140%;height:38%;border-radius:50%;border-top:1px solid color-mix(in srgb,var(--hm-ambient-a) 24%,transparent);box-shadow:0 -35px 90px -65px var(--hm-ambient-a),inset 0 22px 90px -82px var(--hm-ambient-b);transform:rotate(-11deg);filter:blur(2px);opacity:.36;animation:hmAmbientWave 17s ease-in-out infinite alternate}
+body.hm-bg-aurora{--hm-ambient-a:rgba(105,83,255,.78);--hm-ambient-b:rgba(23,202,198,.64);--hm-ambient-c:rgba(103,91,217,.55)}
+body.hm-bg-nebula{--hm-ambient-a:rgba(190,57,233,.76);--hm-ambient-b:rgba(89,73,232,.72);--hm-ambient-c:rgba(247,73,155,.42)}
+body.hm-bg-ocean{--hm-ambient-a:rgba(19,126,235,.78);--hm-ambient-b:rgba(0,206,213,.65);--hm-ambient-c:rgba(35,83,187,.62)}
+body.hm-bg-sunset{--hm-ambient-a:rgba(255,97,120,.68);--hm-ambient-b:rgba(255,163,66,.56);--hm-ambient-c:rgba(141,76,220,.58)}
+body.hm-bg-emerald{--hm-ambient-a:rgba(35,192,130,.62);--hm-ambient-b:rgba(29,174,199,.62);--hm-ambient-c:rgba(87,137,74,.58)}
+body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
+@keyframes hmAmbientFloatA{to{transform:translate(18vw,12vh) scale(1.12)}}@keyframes hmAmbientFloatB{to{transform:translate(-15vw,17vh) scale(.9)}}@keyframes hmAmbientFloatC{to{transform:translate(11vw,-12vh) scale(1.15)}}@keyframes hmAmbientWave{to{transform:translate(5vw,3vh) rotate(-5deg);opacity:.55}}@keyframes hmAmbientStars{to{transform:translate(-11%,8%) rotate(8deg)}}@keyframes hmAmbientBreath{to{transform:scale(1.08);opacity:.75}}
+@media(max-width:700px){.hm-ambient-glow{filter:blur(82px);opacity:.25}.hm-ambient-ribbon{top:39%;height:28%}}
+@media(prefers-reduced-motion:reduce){.hm-ambient-stars,.hm-ambient-glow,.hm-ambient-ribbon,.hm-ambient:before{animation-duration:80s}}
 </style>
 
 
@@ -3810,6 +3829,7 @@ RESPONSIVE
 
 
 <canvas id="galaxyCanvas"></canvas>
+<div id="hmAmbient" class="hm-ambient" aria-hidden="true"><div class="hm-ambient-stars"></div><div class="hm-ambient-glow a"></div><div class="hm-ambient-glow b"></div><div class="hm-ambient-glow c"></div><div class="hm-ambient-ribbon"></div></div>
 
 <div id="seasonParticles" class="season-particles"></div>
 
@@ -5410,6 +5430,7 @@ onclick="toggleAnimations()"
 <div class="settings-group">
 
 <div class="settings-group-title">✨ Дополнительные анимации</div>
+<div class="setting"><div class="setting-name"><b>🌌 Живой фон сайта</b><span>Постоянная анимация на всех страницах. Выбери атмосферу по вкусу.</span></div><select id="ambientStyleSelect" class="settings-select" onchange="changeAmbientStyle(this.value)"><option value="aurora">🌌 Северное сияние</option><option value="nebula">💜 Космическая туманность</option><option value="ocean">🌊 Глубокий океан</option><option value="sunset">🌅 Неоновый закат</option><option value="emerald">💚 Изумрудный свет</option><option value="off">🌑 Без анимации</option></select></div>
 
 <p class="settings-note">Выбери стиль появления, наведения и движения элементов.</p>
 
@@ -10414,6 +10435,10 @@ document.addEventListener("click",()=>{
 
 
 
+const HM_AMBIENT_CLASSES=["hm-bg-aurora","hm-bg-nebula","hm-bg-ocean","hm-bg-sunset","hm-bg-emerald","hm-bg-off"];
+function changeAmbientStyle(value){const valid=["aurora","nebula","ocean","sunset","emerald","off"].includes(value)?value:"aurora";document.body.classList.remove(...HM_AMBIENT_CLASSES);document.body.classList.add("hm-bg-"+valid);localStorage.setItem("hm_ambient_style",valid);const select=document.getElementById("ambientStyleSelect");if(select)select.value=valid;}
+function applyAmbientStyle(){const value=localStorage.getItem("hm_ambient_style")||"aurora";changeAmbientStyle(value);}
+
 /* EXTRA VISUAL FUNCTIONS */
 
 function changeAnimationStyle(v){document.body.classList.remove("anim-bounce","anim-zoom","anim-slide","anim-float","anim-neon","anim-glitch");if(!["classic","smooth"].includes(v))document.body.classList.add("anim-"+v);localStorage.setItem("hm_animation_style",v)}
@@ -11087,6 +11112,8 @@ renderMusic();
 
 
 
+
+applyAmbientStyle();
 
 let hmEntryStartedAt=0,hmEntryTick=null,hmEntryTimeout=null;
 function dismissHmEntry(){const e=document.getElementById("hmEntryLoader");if(!e)return;if(hmEntryTick)clearInterval(hmEntryTick);if(hmEntryTimeout)clearTimeout(hmEntryTimeout);const p=document.getElementById("hmEntryProgress"),n=document.getElementById("hmEntryPct");if(p)p.style.width="100%";if(n)n.textContent="100%";e.classList.add("hm-entry-leaving");document.body.classList.remove("hm-entry-active");setTimeout(()=>e.remove(),650)}
