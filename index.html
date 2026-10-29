@@ -1214,6 +1214,12 @@ transition:.4s;
 
 
 
+.map-card-gallery-controls{position:absolute;z-index:4;left:9px;bottom:9px;display:flex;align-items:center;gap:6px;padding:4px 6px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(5,7,10,.82);backdrop-filter:blur(8px)}
+.map-card-gallery-controls[hidden]{display:none}
+.map-card-gallery-controls button{width:27px;height:27px;border:0;border-radius:6px;background:rgba(255,255,255,.12);color:#fff;font-size:20px;line-height:1}
+.map-card-gallery-controls button:hover{background:var(--accent)}
+.map-card-gallery-controls span{min-width:38px;text-align:center;color:#fff;font-size:10px;font-weight:800}
+
 .card:hover .cover img{
 
 transform:scale(1.05);
@@ -7161,7 +7167,7 @@ CARDS
 function card(build){
 const firstImage=(build.images&&build.images.length?build.images[0]:build.image)||"";const a=build.author||{id:"guest",name:"Гость",avatar:"👤"};
 const price=build.priceType==="plus"?`<span class="build-price-badge plus">PLUS · ${escapeHtml(build.price||"")} zł</span>`:`<span class="build-price-badge">FREE · Бесплатно</span>`;
-return`<article class="card"><div class="cover"><img src="${escapeHtml(firstImage)}" onerror="this.style.display='none'"><div class="placeholder">${escapeHtml(build.icon||"📦")}</div><div class="category">${escapeHtml(build.category||"Сборка")}</div><button class="fav ${favorites.has(build.id)?"active":""}" title="В избранное" aria-label="В избранное" onclick="event.stopPropagation();toggleFavorite('${escapeHtml(build.id)}')">🔖</button><button class="build-like-btn ${buildLikes.has(build.id)?"active":""}" title="Нравится" aria-label="Нравится" onclick="event.stopPropagation();toggleBuildLike('${escapeHtml(build.id)}')">♥</button></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">${escapeHtml(build.name)}</h3><div class="rating">${ratingLabel(build.id)}</div></div>${build.purpose?`<div class="shader-purpose">✦ ${escapeHtml(build.purpose)}</div>`:""}<p class="desc">${escapeHtml(build.description||"")}</p><div class="tags">${(build.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div><div class="build-author" onclick="event.stopPropagation();openAuthorProfile('${escapeHtml(a.id||"guest")}')">${authorAvatarHtml(a,true)}<div style="min-width:0"><div class="build-author-name">${escapeHtml(a.name||"Гость")}${a.premium?" 👑":""}</div><div class="build-date">Вышла: ${formatBuildDate(build.createdAt)}</div></div></div><div class="meta"><span>Minecraft ${escapeHtml(build.version||"—")}</span>${price}</div><div class="build-stats-line"><span>👁 ${bViews(build.id)}</span><span>♥ ${build.likes||0}</span><span>⬇ ${buildDownloads[build.id]||0}</span></div><div class="build-card-download-row"><button class="card-btn" onclick="openBuild('${escapeHtml(build.id)}')">Подробнее →</button><button class="card-btn card-download-btn" onclick="event.stopPropagation();downloadBuildFromCard('${escapeHtml(build.id)}')">${build.sourceUrl?"↗ Открыть и скачать":"⬇ Скачать сборку"}</button></div>${build.userBuild?`<div class="build-card-actions"><button class="btn build-edit-btn" onclick="event.stopPropagation();editBuild('${escapeHtml(build.id)}')">✏ Изменить</button><button class="btn build-delete-btn" onclick="event.stopPropagation();deleteBuild('${escapeHtml(build.id)}')">🗑 Удалить</button></div>`:""}</div></article>`;
+return`<article class="card" data-build-id="${escapeHtml(build.id)}"><div class="cover"><img data-map-cover src="${escapeHtml(firstImage)}" onerror="this.style.display='none'"><div class="placeholder">${escapeHtml(build.icon||"📦")}</div><div class="category">${escapeHtml(build.category||"Сборка")}</div>${build.category==="Карты"?`<div class="map-card-gallery-controls" data-map-gallery-controls hidden><button type="button" aria-label="Предыдущий скриншот" onclick="event.stopPropagation();stepMapCardImage('${escapeHtml(build.id)}',-1)">‹</button><span data-map-gallery-count>1 / 1</span><button type="button" aria-label="Следующий скриншот" onclick="event.stopPropagation();stepMapCardImage('${escapeHtml(build.id)}',1)">›</button></div>`:""}<button class="fav ${favorites.has(build.id)?"active":""}" title="В избранное" aria-label="В избранное" onclick="event.stopPropagation();toggleFavorite('${escapeHtml(build.id)}')">🔖</button><button class="build-like-btn ${buildLikes.has(build.id)?"active":""}" title="Нравится" aria-label="Нравится" onclick="event.stopPropagation();toggleBuildLike('${escapeHtml(build.id)}')">♥</button></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">${escapeHtml(build.name)}</h3><div class="rating">${ratingLabel(build.id)}</div></div>${build.purpose?`<div class="shader-purpose">✦ ${escapeHtml(build.purpose)}</div>`:""}<p class="desc">${escapeHtml(build.description||"")}</p><div class="tags">${(build.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div><div class="build-author" onclick="event.stopPropagation();openAuthorProfile('${escapeHtml(a.id||"guest")}')">${authorAvatarHtml(a,true)}<div style="min-width:0"><div class="build-author-name">${escapeHtml(a.name||"Гость")}${a.premium?" 👑":""}</div><div class="build-date">Вышла: ${formatBuildDate(build.createdAt)}</div></div></div><div class="meta"><span>Minecraft ${escapeHtml(build.version||"—")}</span>${price}</div><div class="build-stats-line"><span>👁 ${bViews(build.id)}</span><span>♥ ${build.likes||0}</span><span>⬇ ${buildDownloads[build.id]||0}</span></div><div class="build-card-download-row"><button class="card-btn" onclick="openBuild('${escapeHtml(build.id)}')">Подробнее →</button><button class="card-btn card-download-btn" onclick="event.stopPropagation();downloadBuildFromCard('${escapeHtml(build.id)}')">${build.sourceUrl?"↗ Открыть и скачать":"⬇ Скачать сборку"}</button></div>${build.userBuild?`<div class="build-card-actions"><button class="btn build-edit-btn" onclick="event.stopPropagation();editBuild('${escapeHtml(build.id)}')">✏ Изменить</button><button class="btn build-delete-btn" onclick="event.stopPropagation();deleteBuild('${escapeHtml(build.id)}')">🗑 Удалить</button></div>`:""}</div></article>`;
 }
 function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
 
@@ -7236,6 +7242,51 @@ function renderCategory(id,category){
   const el=document.getElementById(id); if(!el)return;
   const list=builds.filter(x=>x.category===category);
   el.innerHTML=list.length?list.map(card).join(""):`<p style="color:var(--muted)">Пока пусто.</p>`;
+  if(category==="Карты")observeMapCardGalleries(el,list);
+}
+const hmMapCardGalleryState=new Map();
+function stepMapCardImage(id,delta){
+ const state=hmMapCardGalleryState.get(String(id));if(!state?.images?.length)return;
+ state.index=(state.index+delta+state.images.length)%state.images.length;
+ document.querySelectorAll(".card[data-build-id]").forEach(card=>{
+  if(card.dataset.buildId!==String(id))return;
+  const image=card.querySelector("[data-map-cover]"),count=card.querySelector("[data-map-gallery-count]");
+  if(image)image.src=state.images[state.index];if(count)count.textContent=(state.index+1)+" / "+state.images.length;
+ });
+}
+function showMapCardGallery(build,images){
+ const id=String(build.id),state={images,index:0};hmMapCardGalleryState.set(id,state);
+ document.querySelectorAll(".card[data-build-id]").forEach(card=>{
+  if(card.dataset.buildId!==id)return;
+  const controls=card.querySelector("[data-map-gallery-controls]"),image=card.querySelector("[data-map-cover]"),count=card.querySelector("[data-map-gallery-count]");
+  if(image)image.src=images[0];if(count)count.textContent="1 / "+images.length;if(controls)controls.hidden=false;
+ });
+}
+function observeMapCardGalleries(container,list){
+ if(!("IntersectionObserver" in window))return;
+ const cards=[...container.querySelectorAll(".card[data-build-id]")];if(!cards.length)return;
+ const byId=new Map(list.map(build=>[String(build.id),build]));
+ const observer=new IntersectionObserver(entries=>{
+  for(const entry of entries){
+   if(!entry.isIntersecting)continue;
+   observer.unobserve(entry.target);
+   const build=byId.get(entry.target.dataset.buildId);if(!build||!build.sourceUrl)continue;
+   const id=String(build.id),cached=hmMapCardGalleryState.get(id);
+   if(cached?.images?.length){showMapCardGallery(build,cached.images);continue;}
+   if(cached?.loading)continue;
+   const state={loading:null};hmMapCardGalleryState.set(id,state);
+   state.loading=loadSourcePageGallery(build.sourceUrl).then(extra=>{
+    const images=normalizeGalleryImages([...(build.images||[]),build.image,...extra]).slice(0,12);
+    if(images.length>1)showMapCardGallery(build,images);
+    else hmMapCardGalleryState.set(id,{images});
+   }).catch(()=>hmMapCardGalleryState.set(id,{images:[]}));
+  }
+ },{rootMargin:"500px 0px"});
+ cards.forEach(card=>{
+  const state=hmMapCardGalleryState.get(card.dataset.buildId),build=byId.get(card.dataset.buildId);
+  if(state?.images?.length>1&&build)showMapCardGallery(build,state.images);
+  else if(!state?.loading)observer.observe(card);
+ });
 }
 
 function renderFavorites(){
