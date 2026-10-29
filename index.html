@@ -9719,7 +9719,12 @@ async function handleAvatarFile(event){
   const path=user.id+"/avatar."+((avatarBlob.type==="image/webp")?"webp":"jpg");
   const bucket=client.storage.from("hm-avatars");
   const {error:uploadError}=await bucket.upload(path,avatarBlob,{upsert:true,cacheControl:"3600",contentType:avatarBlob.type});
-  if(uploadError)throw uploadError;
+  if(uploadError){
+   const reason=String(uploadError.message||"");
+   if(/bucket not found/i.test(reason))throw new Error("Хранилище фото ещё не создано. Выполни обновлённый SQL-файл из GitHub в Supabase SQL Editor.");
+   if(/row-level security|unauthorized|permission/i.test(reason))throw new Error("Supabase запретил загрузку фото. Выполни обновлённый SQL-файл миграции и войди в аккаунт заново.");
+   throw uploadError;
+  }
   const {data:publicFile}=bucket.getPublicUrl(path);
   const avatarUrl=publicFile.publicUrl+"?v="+Date.now();
   const {data,error}=await client.auth.updateUser({data:{avatar_url:avatarUrl,avatar_type:"image"}});
