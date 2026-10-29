@@ -9756,7 +9756,7 @@ function loadProfile(){
  if(!account){
   if(miniName)miniName.textContent="Гость";
   if(name)name.textContent="Гость";if(email)email.textContent="Аккаунт не зарегистрирован";
-  if(avatar){avatar.textContent="👤";avatar.style.backgroundImage="";}
+  if(avatar){avatar.textContent="👤";avatar.style.removeProperty("background-image");}
   if(miniAvatar){miniAvatar.textContent="👤";miniAvatar.style.backgroundImage="";}
   const avatarStatus=document.getElementById("profileAvatarStatus");if(avatarStatus){avatarStatus.hidden=true;avatarStatus.textContent="";}
   const since=document.getElementById("profileSince");if(since)since.textContent="Новый пользователь";
@@ -9770,7 +9770,7 @@ function loadProfile(){
  if(miniName)miniName.textContent=safeName;
  if(name)name.textContent=safeName;if(email)email.textContent=account.email||"";
  const avatarUrl=account.avatarType==="image"?account.avatar:"";
- if(avatar){avatar.textContent=avatarUrl?"":account.avatar||"👤";avatar.style.backgroundImage=avatarUrl?'url("'+String(avatarUrl).replace(/["\\]/g,"")+'")':"";avatar.style.backgroundSize="cover";avatar.style.backgroundPosition="center";}
+ if(avatar){avatar.textContent=avatarUrl?"":account.avatar||"👤";if(avatarUrl)avatar.style.setProperty("background-image",'url("'+String(avatarUrl).replace(/["\\]/g,"")+'")',"important");else avatar.style.removeProperty("background-image");avatar.style.backgroundSize="cover";avatar.style.backgroundPosition="center";}
  if(miniAvatar){miniAvatar.textContent=avatarUrl?"":account.avatar||"👤";miniAvatar.style.backgroundImage=avatarUrl?'url("'+String(avatarUrl).replace(/["\\]/g,"")+'")':"";miniAvatar.style.backgroundSize="cover";miniAvatar.style.backgroundPosition="center";}
  const nick=document.getElementById("profileNickField"),mail=document.getElementById("profileEmailField"),id=document.getElementById("profileIdField"),since=document.getElementById("profileSince");
  if(nick)nick.textContent=safeName;if(mail)mail.textContent=account.email||"—";if(id)id.textContent=account.id||"—";
