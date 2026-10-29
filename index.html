@@ -3758,6 +3758,8 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 @media(prefers-reduced-motion:reduce){.hm-ambient-stars,.hm-ambient-glow,.hm-ambient-ribbon,.hm-ambient:before{animation-duration:80s}}
 .modrinth-toolbar{display:flex;flex-direction:column;gap:10px;margin:18px 0}.modrinth-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.modrinth-controls .search{flex:1;min-width:210px;max-width:480px}.modrinth-status{font-size:11px;color:var(--muted)}.modrinth-pager{display:flex;align-items:center;justify-content:center;gap:16px;margin:20px 0 8px;color:var(--muted);font-size:12px}.modrinth-card .cover img{object-fit:cover}.modrinth-card .build-card-download-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.modrinth-card .card-btn{display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}.modrinth-pager button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:600px){.modrinth-controls .settings-select{width:100%}.modrinth-card .build-card-download-row{grid-template-columns:1fr}}\n.shader-purpose{margin-top:9px;padding:7px 9px;border:1px solid rgba(124,92,255,.22);border-radius:7px;background:rgba(124,92,255,.09);color:var(--accent2);font-size:10px;font-weight:800;line-height:1.4}\n
 #page-plugins .section-head{align-items:center;margin-bottom:4px}.plugin-empty{grid-column:1/-1;padding:28px;color:var(--muted);border:1px dashed var(--border);border-radius:13px}
+
+.hm-auth-overlay{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(3,4,9,.82);backdrop-filter:blur(16px)}.hm-auth-overlay.active{display:flex;animation:hmAuthFade .25s ease}.hm-auth-dialog{position:relative;display:grid;grid-template-columns:minmax(260px,.92fr) minmax(320px,1.08fr);width:min(820px,100%);min-height:530px;overflow:hidden;border:1px solid rgba(158,132,255,.27);border-radius:26px;background:#10121c;box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 90px rgba(124,92,255,.14);animation:hmAuthRise .38s cubic-bezier(.2,.8,.2,1)}.hm-auth-close{position:absolute;right:14px;top:12px;z-index:2;width:36px;height:36px;border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#c7c9d5;background:rgba(9,10,16,.5);font-size:24px}.hm-auth-visual{position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:34px;background:radial-gradient(circle at 24% 24%,rgba(142,104,255,.34),transparent 36%),linear-gradient(155deg,#19172b,#10131e 72%)}.hm-auth-visual:after{content:"";position:absolute;width:360px;height:360px;top:-150px;left:-90px;border-radius:50%;background:radial-gradient(circle,rgba(135,99,255,.2),transparent 68%);pointer-events:none}.hm-auth-logo{position:absolute;top:44px;left:36px;display:grid;place-items:center;width:58px;height:58px;border-radius:18px;background:linear-gradient(140deg,#a68bff,#6844df);box-shadow:0 12px 40px rgba(113,81,229,.38);font-size:22px;font-weight:1000}.hm-auth-kicker{position:relative;z-index:1;color:#b6a6ff;font-size:10px;font-weight:900;letter-spacing:2px}.hm-auth-visual h2{position:relative;z-index:1;margin:12px 0 9px;font-size:31px;letter-spacing:-1px}.hm-auth-visual p{position:relative;z-index:1;max-width:300px;color:#a2a6b5;font-size:13px;line-height:1.65}.hm-auth-mini-stats{position:relative;z-index:1;display:flex;flex-direction:column;gap:9px;margin-top:24px;color:#d4d0e8;font-size:11px}.hm-auth-orbit{position:absolute;border:1px solid rgba(170,146,255,.11);border-radius:50%;pointer-events:none}.hm-auth-orbit-a{width:310px;height:310px;top:70px;right:-200px}.hm-auth-orbit-b{width:220px;height:220px;top:116px;right:-155px}.hm-auth-form-wrap{display:flex;flex-direction:column;justify-content:center;padding:54px 42px 34px}.hm-auth-tabs{display:flex;gap:5px;padding:4px;margin-bottom:27px;border:1px solid #242735;border-radius:12px;background:#0b0d14}.hm-auth-tabs button{flex:1;height:37px;border:0;border-radius:9px;color:#8c91a1;background:transparent;font-size:11px;font-weight:800}.hm-auth-tabs button.active{color:#fff;background:linear-gradient(100deg,#7555ef,#925cff);box-shadow:0 6px 18px rgba(119,84,238,.22)}.hm-auth-form-wrap h3{margin:0;font-size:24px;letter-spacing:-.6px}.hm-auth-form-wrap>p:not(.hm-auth-secure-note){margin:8px 0 23px;color:#9298a8;font-size:12px}.hm-auth-field{display:block;margin:0 0 14px;color:#c9ccda;font-size:10px;font-weight:800}.hm-auth-field input{display:block;width:100%;height:43px;margin-top:7px;padding:0 12px;border:1px solid #292d3a;border-radius:10px;color:#9297a7;background:#0b0d14;outline:none}.hm-auth-field input:disabled{opacity:.72}.hm-auth-submit{width:100%;height:45px;margin-top:3px;border:1px solid rgba(151,124,255,.28);border-radius:11px;color:#b9adf5;background:linear-gradient(100deg,rgba(115,80,230,.24),rgba(139,78,255,.18));font-size:11px;font-weight:900}.hm-auth-submit:disabled{cursor:not-allowed;opacity:.76}.hm-auth-secure-note{display:flex;gap:9px;margin:15px 0 0;padding:11px;border:1px solid rgba(255,197,93,.17);border-radius:10px;color:#a8a4a0;background:rgba(255,190,74,.045);font-size:9px;line-height:1.55}.hm-auth-secure-note span{flex:0 0 auto}.hm-auth-later{margin-top:14px;border:0;color:#969aab;background:transparent;font-size:10px}@keyframes hmAuthFade{from{opacity:0}to{opacity:1}}@keyframes hmAuthRise{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}@media(max-width:680px){.hm-auth-overlay{padding:12px}.hm-auth-dialog{grid-template-columns:1fr;max-width:440px;min-height:0}.hm-auth-visual{min-height:205px;padding:24px}.hm-auth-logo{top:24px;left:24px;width:48px;height:48px;border-radius:15px;font-size:18px}.hm-auth-visual h2{font-size:24px}.hm-auth-visual p{margin:0}.hm-auth-mini-stats,.hm-auth-orbit{display:none}.hm-auth-form-wrap{padding:25px 24px 22px}.hm-auth-tabs{margin-bottom:20px}.hm-auth-close{right:9px;top:9px}}
 </style>
 
 
@@ -9586,39 +9588,12 @@ function makeAccountId(){
 
 
 
-function registerOrLogin(){
-
-  const old=getAccount();
-
-  const name=prompt("Введите никнейм:",old?.name||"");
-
-  if(!name || !name.trim())return;
-
-  const email=prompt("Введите email:",old?.email||"");
-
-  if(!email || !email.trim())return;
-
-  const account=old||{id:makeAccountId(),createdAt:new Date().toISOString(),avatar:"👤"};
-
-  // Если старому профилю ID ещё не был выдан — выдаём его автоматически.
-
-  if(!account.id) account.id=makeAccountId();
-
-  account.name=name.trim();
-
-  account.email=email.trim();
-
-  localStorage.setItem("hm_account",JSON.stringify(account));
-
-  loadProfile();
-
-applyExtraVisualSettings();
-
-applyAdvancedSettings();
-
-  alert(old?"Профиль обновлён!":"Аккаунт создан и сохранён в этом браузере.");
-
-}
+function registerOrLogin(){openAuthModal(getAccount()?"login":"register");}
+let hmAuthMode="register";
+function openAuthModal(mode="register"){setAuthMode(mode);const modal=document.getElementById("hmAuthModal");if(!modal)return;modal.classList.add("active");modal.setAttribute("aria-hidden","false");document.body.classList.add("hm-auth-open");}
+function closeAuthModal(){const modal=document.getElementById("hmAuthModal");if(!modal)return;modal.classList.remove("active");modal.setAttribute("aria-hidden","true");document.body.classList.remove("hm-auth-open");}
+function setAuthMode(mode){hmAuthMode=mode==="login"?"login":"register";const login=document.getElementById("hmAuthTabLogin"),register=document.getElementById("hmAuthTabRegister"),name=document.getElementById("hmAuthNameField"),heading=document.getElementById("hmAuthHeading"),sub=document.getElementById("hmAuthSubheading");if(login)login.classList.toggle("active",hmAuthMode==="login");if(register)register.classList.toggle("active",hmAuthMode==="register");if(name)name.style.display=hmAuthMode==="register"?"block":"none";if(heading)heading.textContent=hmAuthMode==="login"?"С возвращением":"Создай свой профиль";if(sub)sub.textContent=hmAuthMode==="login"?"Войди, чтобы открыть свою коллекцию.":"Собери любимые материалы Minecraft в одном месте."}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAuthModal();});
 
 
 
@@ -11207,6 +11182,7 @@ function dismissHmEntry(){const e=document.getElementById("hmEntryLoader");if(!e
 
 
 
+<div id="hmAuthModal" class="hm-auth-overlay" aria-hidden="true" onclick="if(event.target===this)closeAuthModal()"><section class="hm-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="hmAuthTitle"><button class="hm-auth-close" type="button" aria-label="Закрыть" onclick="closeAuthModal()">×</button><div class="hm-auth-visual"><div class="hm-auth-orbit hm-auth-orbit-a"></div><div class="hm-auth-orbit hm-auth-orbit-b"></div><div class="hm-auth-logo">HM</div><span class="hm-auth-kicker">HYPEMINE ACCOUNT</span><h2 id="hmAuthTitle">Твоя игровая зона</h2><p>Собирай любимые карты, моды и шейдеры в одном месте.</p><div class="hm-auth-mini-stats"><span>✦ Твоя коллекция</span><span>⌁ Настройки профиля</span></div></div><div class="hm-auth-form-wrap"><div class="hm-auth-tabs"><button id="hmAuthTabLogin" type="button" onclick="setAuthMode('login')">Вход</button><button id="hmAuthTabRegister" type="button" onclick="setAuthMode('register')">Регистрация</button></div><h3 id="hmAuthHeading">Создай свой профиль</h3><p id="hmAuthSubheading">Собери любимые материалы Minecraft в одном месте.</p><label class="hm-auth-field">Электронная почта<input type="email" autocomplete="email" placeholder="name@example.com" disabled></label><label id="hmAuthNameField" class="hm-auth-field">Имя пользователя<input type="text" autocomplete="nickname" placeholder="Твой никнейм" disabled></label><label class="hm-auth-field">Пароль<input type="password" autocomplete="current-password" placeholder="••••••••••" disabled></label><button class="hm-auth-submit" type="button" disabled>Скоро будет доступно</button><p class="hm-auth-secure-note"><span>🔒</span> Защищённый вход и регистрацию подключим позже. Пока не вводи пароль: профиль хранится только в этом браузере.</p><button class="hm-auth-later" type="button" onclick="closeAuthModal()">Продолжить как гость</button></div></section></div>
 </body>
 
 </html>
