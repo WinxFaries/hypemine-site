@@ -3756,7 +3756,9 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 @keyframes hmAmbientFloatA{to{transform:translate(18vw,12vh) scale(1.12)}}@keyframes hmAmbientFloatB{to{transform:translate(-15vw,17vh) scale(.9)}}@keyframes hmAmbientFloatC{to{transform:translate(11vw,-12vh) scale(1.15)}}@keyframes hmAmbientWave{to{transform:translate(5vw,3vh) rotate(-5deg);opacity:.55}}@keyframes hmAmbientStars{to{transform:translate(-11%,8%) rotate(8deg)}}@keyframes hmAmbientBreath{to{transform:scale(1.08);opacity:.75}}
 @media(max-width:700px){.hm-ambient-glow{filter:blur(82px);opacity:.25}.hm-ambient-ribbon{top:39%;height:28%}}
 @media(prefers-reduced-motion:reduce){.hm-ambient-stars,.hm-ambient-glow,.hm-ambient-ribbon,.hm-ambient:before{animation-duration:80s}}
-.modrinth-toolbar{display:flex;flex-direction:column;gap:10px;margin:18px 0}.modrinth-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.modrinth-controls .search{flex:1;min-width:210px;max-width:480px}.modrinth-status{font-size:11px;color:var(--muted)}.modrinth-pager{display:flex;align-items:center;justify-content:center;gap:16px;margin:20px 0 8px;color:var(--muted);font-size:12px}.modrinth-card .cover img{object-fit:cover}.modrinth-card .build-card-download-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.modrinth-card .card-btn{display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}.modrinth-pager button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:600px){.modrinth-controls .settings-select{width:100%}.modrinth-card .build-card-download-row{grid-template-columns:1fr}}\n.shader-purpose{margin-top:9px;padding:7px 9px;border:1px solid rgba(124,92,255,.22);border-radius:7px;background:rgba(124,92,255,.09);color:var(--accent2);font-size:10px;font-weight:800;line-height:1.4}\n</style>
+.modrinth-toolbar{display:flex;flex-direction:column;gap:10px;margin:18px 0}.modrinth-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.modrinth-controls .search{flex:1;min-width:210px;max-width:480px}.modrinth-status{font-size:11px;color:var(--muted)}.modrinth-pager{display:flex;align-items:center;justify-content:center;gap:16px;margin:20px 0 8px;color:var(--muted);font-size:12px}.modrinth-card .cover img{object-fit:cover}.modrinth-card .build-card-download-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.modrinth-card .card-btn{display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}.modrinth-pager button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:600px){.modrinth-controls .settings-select{width:100%}.modrinth-card .build-card-download-row{grid-template-columns:1fr}}\n.shader-purpose{margin-top:9px;padding:7px 9px;border:1px solid rgba(124,92,255,.22);border-radius:7px;background:rgba(124,92,255,.09);color:var(--accent2);font-size:10px;font-weight:800;line-height:1.4}\n
+#page-plugins .section-head{align-items:center;margin-bottom:4px}.plugin-empty{grid-column:1/-1;padding:28px;color:var(--muted);border:1px dashed var(--border);border-radius:13px}
+</style>
 
 
 <style id="hm-profile-hud-refresh">
@@ -4409,33 +4411,15 @@ style="margin-top:20px"
 
 
 <section id="page-plugins" class="page layout-page" data-layout-id="page-plugins">
-
-
-
-<h2>🔌 Плагины</h2>
-
-
-
-<p class="subtitle">
-
-Плагины для серверов Minecraft
-
-</p>
-
-
-
-<div
-
-id="pluginsGrid"
-
-class="grid"
-
-style="margin-top:20px"
-
-></div>
-
-
-
+  <div class="section-head"><div><h2>🔌 Каталог плагинов</h2><p class="subtitle">Живой поиск по PaperMC Hangar и Modrinth</p></div></div>
+  <div class="modrinth-toolbar"><div class="modrinth-controls">
+    <select id="pluginSource" class="settings-select" aria-label="Источник плагинов" onchange="changePluginSource(this.value)"><option value="hangar">Hangar · Paper / Velocity</option><option value="modrinth">Modrinth · plugin проекты</option></select>
+    <input id="pluginSearch" class="search" type="search" placeholder="Найти плагин…" onkeydown="if(event.key==='Enter')searchPlugins()">
+    <button class="btn btn-primary" type="button" onclick="searchPlugins()">Найти</button>
+    <select id="pluginSort" class="settings-select" aria-label="Сортировка плагинов" onchange="changePluginSort(this.value)"><option value="downloads">Сначала популярные</option><option value="updated">Недавно обновлённые</option><option value="newest">Новые</option></select>
+  </div><div id="pluginStatus" class="modrinth-status">Подключаем каталоги плагинов…</div></div>
+  <div id="pluginsGrid" class="grid" style="margin-top:20px"></div><div id="pluginPager" class="modrinth-pager"></div>
+  <div class="external-catalog-card" style="margin:20px 0;padding:22px;border:1px solid var(--border);border-radius:13px;background:var(--card)"><h3 style="margin:0 0 8px;font-size:17px">Ещё каталоги плагинов</h3><p class="subtitle" style="margin:0 0 15px;line-height:1.6">Открой SpigotMC, чтобы просмотреть плагины Bukkit/Spigot и страницы авторов.</p><a class="btn" href="https://www.spigotmc.org/resources/" target="_blank" rel="noopener noreferrer">Открыть SpigotMC →</a></div>
 </section>
 
 
@@ -7212,7 +7196,7 @@ function renderAll(){
   });
   renderCatalog("Сборки модов");
   renderCategory("mapsGrid","Карты"); renderModrinthCatalog();
-  renderCategory("shadersGrid","Шейдеры"); renderCategory("pluginsGrid","Плагины");
+  renderCategory("shadersGrid","Шейдеры"); renderPluginCatalog();
   renderFavorites(); renderMusic(); updateAddBuildButton();
 }
 function renderCatalog(category="Сборки модов"){
@@ -10487,6 +10471,57 @@ async function downloadModrinthProject(id,slug){
   const versions=await r.json(),v=versions.find(x=>x.game_versions?.includes("1.20.1")&&x.loaders?.includes("forge")),f=v?.files?.find(x=>x.primary)||v?.files?.[0];if(!f?.url)throw new Error("Файл не найден");
   if(tab)tab.location.href=f.url;else window.location.href=f.url;
  }catch(e){const fallback="https://modrinth.com/mod/"+encodeURIComponent(slug||id)+"/versions?g=1.20.1&l=forge";if(tab)tab.location.href=fallback;else window.open(fallback,"_blank","noopener,noreferrer");}
+}
+
+const HANGAR_API="https://hangar.papermc.io/api/v1";
+const pluginState={source:"hangar",hits:[],total:0,offset:0,limit:24,query:"",sort:"downloads",loading:false,loaded:false,error:""};
+function pluginPageCount(){return Math.max(1,Math.ceil(pluginState.total/pluginState.limit));}
+function changePluginSource(source){pluginState.source=source==="modrinth"?"modrinth":"hangar";pluginState.loaded=false;pluginState.hits=[];pluginState.total=0;pluginState.error="";const sort=document.getElementById("pluginSort");if(sort)sort.disabled=pluginState.source==="hangar";loadPluginPage(0);}
+function changePluginSort(sort){pluginState.sort=["downloads","updated","newest"].includes(sort)?sort:"downloads";if(pluginState.source==="modrinth")loadPluginPage(0);}
+function searchPlugins(){pluginState.query=(document.getElementById("pluginSearch")?.value||"").trim();loadPluginPage(0);}
+function renderPluginCatalog(){
+ const grid=document.getElementById("pluginsGrid");if(!grid)return;
+ if(!pluginState.loaded&&!pluginState.loading&&!pluginState.error){loadPluginPage(0);return;}
+ grid.innerHTML=pluginState.hits.map(project=>{
+  const hangar=pluginState.source==="hangar",owner=project.namespace?.owner||"",slug=project.slug||project.name||project.project_id;
+  const href=hangar?"https://hangar.papermc.io/"+encodeURIComponent(owner)+"/"+encodeURIComponent(project.namespace?.slug||slug):"https://modrinth.com/plugin/"+encodeURIComponent(project.slug||slug);
+  const cover=hangar?(project.avatarUrl||""):(project.featured_gallery||project.gallery?.[0]||project.icon_url||"");
+  const title=project.name||project.title||slug,author=hangar?owner:(project.author||"Автор Modrinth"),count=hangar?Number(project.stats?.downloads||0):Number(project.downloads||0);
+  const platforms=hangar?Object.entries(project.supportedPlatforms||{}).filter(([,v])=>Array.isArray(v)&&v.length).map(([p,v])=>p+" "+v.slice(-2).join(", ")):((project.versions||[]).slice(0,3).join(", ")||"Совместимость уточняй на странице");
+  const tags=hangar?Object.keys(project.supportedPlatforms||{}).filter(p=>(project.supportedPlatforms[p]||[]).length):["Plugin",...(project.categories||[]).slice(0,2)];
+  const tagHtml=tags.slice(0,4).map(t=>'<span class="tag">'+escapeHtml(t)+'</span>').join("");
+  const image=cover?'<img loading="lazy" src="'+escapeHtml(cover)+'" alt="Иконка '+escapeHtml(title)+'" onerror="this.style.display=\'none\'">':'';
+  const action=hangar?'<a class="card-btn card-download-btn" href="'+escapeHtml(href)+'" target="_blank" rel="noopener noreferrer">↗ Открыть и скачать</a>':'<button class="card-btn card-download-btn" type="button" data-plugin-download="'+escapeHtml(project.project_id)+'" data-plugin-slug="'+escapeHtml(project.slug||slug)+'">⬇ Скачать</button>';
+  return '<article class="card modrinth-card"><div class="cover">'+image+'<div class="placeholder">🔌</div><div class="category">'+(hangar?"Hangar · "+escapeHtml(tags[0]||"Plugin"):"Modrinth · Plugin")+'</div></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">'+escapeHtml(title)+'</h3><div class="rating">⬇ '+count.toLocaleString("ru-RU")+'</div></div><p class="desc">'+escapeHtml(project.description||project.tag||"Плагин для Minecraft-сервера.")+'</p><div class="tags">'+tagHtml+'</div><div class="build-author"><div class="profile-text"><b>'+escapeHtml(author)+'</b><span>'+escapeHtml(platforms||"Поддерживаемые платформы — на странице плагина")+'</span></div></div><div class="build-card-download-row"><a class="card-btn" href="'+escapeHtml(href)+'" target="_blank" rel="noopener noreferrer">Подробнее →</a>'+action+'</div></div></article>';
+ }).join("")||'<p class="plugin-empty">Плагины не найдены. Попробуй другой запрос или каталог.</p>';
+ grid.querySelectorAll("[data-plugin-download]").forEach(button=>button.addEventListener("click",()=>downloadModrinthPlugin(button.dataset.pluginDownload,button.dataset.pluginSlug)));
+ const status=document.getElementById("pluginStatus"),page=Math.floor(pluginState.offset/pluginState.limit)+1;
+ if(status)status.textContent=pluginState.loading?"Загружаем каталог…":pluginState.error?"Каталог временно недоступен: "+pluginState.error:(pluginState.source==="hangar"?"Hangar · ":"Modrinth · ")+"Найдено: "+pluginState.total.toLocaleString("ru-RU")+" · страница "+page+" из "+pluginPageCount();
+ renderPluginPager();
+}
+function renderPluginPager(){
+ const host=document.getElementById("pluginPager");if(!host)return;const page=Math.floor(pluginState.offset/pluginState.limit)+1,total=pluginPageCount();
+ host.innerHTML='<button class="btn" type="button" '+(page<=1||pluginState.loading?'disabled':'')+' data-plugin-page="-1">← Назад</button><span>Страница '+page+' / '+total+'</span><button class="btn btn-primary" type="button" '+(page>=total||pluginState.loading?'disabled':'')+' data-plugin-page="1">Дальше →</button>';
+ host.querySelectorAll("[data-plugin-page]").forEach(b=>b.addEventListener("click",()=>loadPluginPage(pluginState.offset+Number(b.dataset.pluginPage)*pluginState.limit)));
+}
+async function loadPluginPage(offset=0){
+ if(pluginState.loading)return;pluginState.loading=true;pluginState.error="";pluginState.offset=Math.max(0,offset);pluginState.hits=[];renderPluginCatalog();
+ try{
+  let url,data;
+  if(pluginState.source==="hangar"){
+   url=new URL(HANGAR_API+"/projects");url.searchParams.set("limit",String(pluginState.limit));url.searchParams.set("offset",String(pluginState.offset));if(pluginState.query)url.searchParams.set("q",pluginState.query);
+   const response=await fetch(url.href,{headers:{Accept:"application/json"}});if(!response.ok)throw new Error("Hangar HTTP "+response.status);data=await response.json();pluginState.hits=Array.isArray(data.result)?data.result:[];pluginState.total=Number(data.pagination?.count)||0;
+  }else{
+   url=new URL(MODRINTH_API+"/search");url.searchParams.set("facets",JSON.stringify([["all_project_types:plugin"]]));url.searchParams.set("limit",String(pluginState.limit));url.searchParams.set("offset",String(pluginState.offset));url.searchParams.set("index",pluginState.sort);if(pluginState.query)url.searchParams.set("query",pluginState.query);
+   const response=await fetch(url.href,{headers:{Accept:"application/json"}});if(!response.ok)throw new Error("Modrinth HTTP "+response.status);data=await response.json();pluginState.hits=Array.isArray(data.hits)?data.hits:[];pluginState.total=Number(data.total_hits)||0;
+  }pluginState.loaded=true;
+ }catch(e){pluginState.error=e.message||"ошибка сети";pluginState.hits=[];pluginState.total=0;}
+ finally{pluginState.loading=false;renderPluginCatalog();}
+}
+async function downloadModrinthPlugin(id,slug){
+ const tab=window.open("about:blank","_blank");
+ try{const r=await fetch(MODRINTH_API+"/project/"+encodeURIComponent(id)+"/version?include_changelog=false",{headers:{Accept:"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);const versions=await r.json(),file=versions[0]?.files?.find(x=>x.primary)||versions[0]?.files?.[0];if(!file?.url)throw new Error("Файл не найден");if(tab)tab.location.href=file.url;else window.location.href=file.url;}
+ catch(e){const url="https://modrinth.com/plugin/"+encodeURIComponent(slug||id);if(tab)tab.location.href=url;else window.open(url,"_blank","noopener,noreferrer");}
 }
 
 /* EXTRA VISUAL FUNCTIONS */
