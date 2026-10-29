@@ -3945,6 +3945,11 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 .hm-profile-banner-actions [hidden]{display:none!important}
 @media(max-width:480px){.hm-profile-banner-actions{flex-direction:column}.hm-profile-banner-actions .btn{width:100%}}
 </style>
+<style id="hm-resource-gallery-style">
+.catalog-gallery-btn{width:100%;min-height:34px;margin-top:8px;border:1px solid rgba(153,132,255,.24);border-radius:8px;background:rgba(124,92,255,.08);color:#c5b8ff;font-size:10px;font-weight:900;cursor:pointer}
+.catalog-gallery-btn:hover{background:rgba(124,92,255,.16);border-color:rgba(153,132,255,.5)}
+.gallery-caption{grid-column:1/-1;color:#aeb5c7;font-size:11px;font-weight:800;letter-spacing:.25px;padding:2px 1px}
+</style>
 </head>
 
 
@@ -7300,9 +7305,64 @@ MODAL
 
 
 
+function normalizeGalleryImages(values){
+ const out=[];for(const value of values||[]){const raw=typeof value==="string"?value:value?.url||value?.src||value?.image||value?.path;if(typeof raw!=="string")continue;try{const url=new URL(raw,location.href);if(!["http:","https:"].includes(url.protocol))continue;const clean=url.href;if(!out.includes(clean))out.push(clean);}catch(_){}}
+ return out;
+}
+function renderBuildGallery(build,images){
+ const list=normalizeGalleryImages(images).slice(0,12);if(!list.length)return;
+ window._photoList=list;window._photoIndex=0;window._openBuildModalId=build.id;
+ const image=document.getElementById("modalImage"),host=document.getElementById("modalGallery");
+ if(image){image.src=list[0];image.style.display="block";image.style.cursor=list.length?"zoom-in":"default";image.onclick=()=>openPhotoViewer(0);}
+ if(host)host.innerHTML='<div class="gallery-caption">📸 Скриншоты и примеры работы · '+list.length+'</div>'+list.map((url,i)=>'<img src="'+escapeHtml(url)+'" alt="Пример '+(i+1)+' — '+escapeHtml(build.name)+'" loading="lazy" onclick="openPhotoViewer('+i+')">').join("");
+}
+const hmSourceGalleryCache=new Map();
+async function loadSourcePageGallery(sourceUrl){
+ if(!sourceUrl)return [];
+ let url;try{url=new URL(sourceUrl);}catch(_){return [];}
+ const host=url.hostname.toLowerCase();
+ if(!(host==="minecraft-inside.ru"||host.endsWith(".minecraft-inside.ru")||host==="hangar.papermc.io"||host.endsWith(".hangar.papermc.io")))return [];
+ if(hmSourceGalleryCache.has(url.href))return hmSourceGalleryCache.get(url.href);
+ const task=(async()=>{
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+  try{
+   const response=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent(url.href),{signal:controller.signal,headers:{Accept:"text/html"}});
+   if(!response.ok)throw new Error("Gallery HTTP "+response.status);
+   const html=await response.text(),doc=new DOMParser().parseFromString(html,"text/html"),found=[];
+   const nodes=[...doc.querySelectorAll("img, a[href], meta[property='og:image']")];
+   for(const node of nodes){
+    const candidates=[node.getAttribute("data-original"),node.getAttribute("data-src"),node.getAttribute("data-lazy-src"),node.getAttribute("src"),node.getAttribute("href"),node.getAttribute("content")];
+    for(const raw of candidates){if(!raw)continue;try{
+     const imageUrl=new URL(raw,url.href),path=imageUrl.pathname.toLowerCase();
+     if(!["http:","https:"].includes(imageUrl.protocol))continue;
+     if(!(imageUrl.hostname==="minecraft-inside.ru"||imageUrl.hostname.endsWith(".minecraft-inside.ru")||imageUrl.hostname==="hangar.papermc.io"||imageUrl.hostname.endsWith(".hangar.papermc.io")))continue;
+     if(!/\.(png|jpe?g|webp|gif|avif)(?:$)/i.test(path))continue;
+     if(!/(uploads\/(files|images|gallery)|gallery|screenshots)/i.test(path))continue;
+     const clean=imageUrl.href.split("#")[0];if(!found.includes(clean))found.push(clean);
+    }catch(_){}}
+   }
+   return found.slice(0,12);
+  }catch(_){return []}finally{clearTimeout(timer)}
+ })();
+ hmSourceGalleryCache.set(url.href,task);return task;
+}
+async function loadMinecraftInsideGallery(build){return loadSourcePageGallery(build?.sourceUrl||build?.downloadUrl||"");}
+function openResourceGallery(key){
+ const resource=window.hmResourceGalleryStore?.[key];if(!resource)return;
+ (async()=>{
+  let images=normalizeGalleryImages(resource.images||[]);
+  if(resource.projectId&&resource.apiType){
+   try{const res=await fetch(MODRINTH_API+"/project/"+encodeURIComponent(resource.projectId),{headers:{Accept:"application/json"}});if(res.ok){const detail=await res.json();images=normalizeGalleryImages([...(detail.gallery||[]),...images]);}}catch(_){}
+  }
+  if(images.length<=1&&resource.sourceUrl){const extra=await loadSourcePageGallery(resource.sourceUrl);images=normalizeGalleryImages([...images,...extra]);}
+  resource.images=images;if(!images.length){alert("Для этого материала источник пока не отдаёт фотографии.");return;}
+  window._photoList=images.slice(0,12);openPhotoViewer(0);
+ })();
+}
+
 function downloadBuildFromCard(id){const b=builds.find(x=>x.id===id);if(!b)return;const url=(b.downloadUrl||"").trim();if(url){registerBuildDownload(id);window.open(url,"_blank","noopener,noreferrer");return;}openBuild(id);}
 
-function openBuild(id){const b=builds.find(x=>x.id===id);if(!b)return;window._photoList=(b.images&&b.images.length?b.images:[b.image]).filter(Boolean).slice(0,12);window._photoIndex=0;registerBuildView(id);document.getElementById("modalTitle").textContent=b.name;document.getElementById("modalDescription").textContent=b.description||"";document.getElementById("modalVersion").textContent=b.version||"—";document.getElementById("modalCategory").textContent=b.category||"—";const ratingInfo=getBuildRatingInfo(b.id);document.getElementById("modalRating").textContent=ratingInfo.count?`★ ${ratingInfo.average.toFixed(1)} из 5 · ${ratingInfo.count} ${ratingInfo.count===1?"оценка":ratingInfo.count<5?"оценки":"оценок"}`:"☆ Пока нет оценок";renderRatingControls(b.id);document.getElementById("modalTags").innerHTML=(b.tags||[]).map(x=>`<span class="tag">${escapeHtml(x)}</span>`).join("");const imgs=(b.images&&b.images.length?b.images:[b.image]).filter(Boolean).slice(0,5),im=document.getElementById("modalImage");im.src=imgs[0]||"";im.style.display=imgs[0]?"block":"none";document.getElementById("modalPlaceholder").textContent=b.icon||"📦";document.getElementById("modalPlaceholder").style.display="none";let g=document.getElementById("modalGallery");if(!g){g=document.createElement("div");g.id="modalGallery";g.className="build-gallery";document.querySelector("#buildModal .modal-cover").after(g);}g.innerHTML=imgs.map((x,i)=>`<img src="${escapeHtml(x)}" alt="Фото ${i+1}" onclick="openPhotoViewer(${i})">`).join("");im.onclick=()=>openPhotoViewer(0);im.style.cursor=imgs.length?"zoom-in":"default";document.getElementById("modalPrice").textContent=b.priceType==="plus"?`PLUS · ${b.price||"0"} zł`:"FREE · Бесплатно";document.getElementById("modalDate").textContent=formatBuildDate(b.createdAt);document.getElementById("modalStats").textContent=`👁 ${bViews(b.id)} · ♥ ${b.likes||0} · ⬇ ${buildDownloads[b.id]||0}`;const ma=document.getElementById("modalAuthor");ma.innerHTML=`${authorAvatarHtml(b.author||{name:"Гость",avatar:"👤"},true)}<span>${escapeHtml(b.author?.name||"Гость")}${b.author?.premium?" 👑":""}</span>`;ma.onclick=()=>openAuthorProfile(b.author?.id||"guest");const d=document.getElementById("downloadButton");d.onclick=()=>registerBuildDownload(b.id);const externalUrl=(b.downloadUrl||"").trim();d.href=externalUrl|| (b.local&&b.fileBlob?(b._downloadUrl=URL.createObjectURL(b.fileBlob),b._downloadUrl):"builds/"+encodeURIComponent(b.id)+".zip");if(externalUrl){d.removeAttribute("download");d.target="_blank";d.rel="noopener noreferrer";}else{d.removeAttribute("target");d.removeAttribute("rel");d.download=b.fileName||b.id+".zip";}d.textContent=b.sourceUrl?"↗ Открыть загрузку на Minecraft Inside":(b.priceType==="plus"?"⬇ Скачать сборку · "+(b.price||"")+" zł":"⬇ Скачать сборку бесплатно");document.getElementById("buildModal").classList.add("show");}
+function openBuild(id){const b=builds.find(x=>x.id===id);if(!b)return;window._photoList=(b.images&&b.images.length?b.images:[b.image]).filter(Boolean).slice(0,12);window._photoIndex=0;registerBuildView(id);document.getElementById("modalTitle").textContent=b.name;document.getElementById("modalDescription").textContent=b.description||"";document.getElementById("modalVersion").textContent=b.version||"—";document.getElementById("modalCategory").textContent=b.category||"—";const ratingInfo=getBuildRatingInfo(b.id);document.getElementById("modalRating").textContent=ratingInfo.count?`★ ${ratingInfo.average.toFixed(1)} из 5 · ${ratingInfo.count} ${ratingInfo.count===1?"оценка":ratingInfo.count<5?"оценки":"оценок"}`:"☆ Пока нет оценок";renderRatingControls(b.id);document.getElementById("modalTags").innerHTML=(b.tags||[]).map(x=>`<span class="tag">${escapeHtml(x)}</span>`).join("");const imgs=normalizeGalleryImages([...(b.images&&b.images.length?b.images:[]),b.image]).slice(0,12),im=document.getElementById("modalImage");im.src=imgs[0]||"";im.style.display=imgs[0]?"block":"none";document.getElementById("modalPlaceholder").textContent=b.icon||"📦";document.getElementById("modalPlaceholder").style.display="none";let g=document.getElementById("modalGallery");if(!g){g=document.createElement("div");g.id="modalGallery";g.className="build-gallery";document.querySelector("#buildModal .modal-cover").after(g);}renderBuildGallery(b,imgs);document.getElementById("modalPrice").textContent=b.priceType==="plus"?`PLUS · ${b.price||"0"} zł`:"FREE · Бесплатно";document.getElementById("modalDate").textContent=formatBuildDate(b.createdAt);document.getElementById("modalStats").textContent=`👁 ${bViews(b.id)} · ♥ ${b.likes||0} · ⬇ ${buildDownloads[b.id]||0}`;const ma=document.getElementById("modalAuthor");ma.innerHTML=`${authorAvatarHtml(b.author||{name:"Гость",avatar:"👤"},true)}<span>${escapeHtml(b.author?.name||"Гость")}${b.author?.premium?" 👑":""}</span>`;ma.onclick=()=>openAuthorProfile(b.author?.id||"guest");const d=document.getElementById("downloadButton");d.onclick=()=>registerBuildDownload(b.id);const externalUrl=(b.downloadUrl||"").trim();d.href=externalUrl|| (b.local&&b.fileBlob?(b._downloadUrl=URL.createObjectURL(b.fileBlob),b._downloadUrl):"builds/"+encodeURIComponent(b.id)+".zip");if(externalUrl){d.removeAttribute("download");d.target="_blank";d.rel="noopener noreferrer";}else{d.removeAttribute("target");d.removeAttribute("rel");d.download=b.fileName||b.id+".zip";}d.textContent=b.sourceUrl?"↗ Открыть загрузку на Minecraft Inside":(b.priceType==="plus"?"⬇ Скачать сборку · "+(b.price||"")+" zł":"⬇ Скачать сборку бесплатно");document.getElementById("buildModal").classList.add("show");if(b.sourceUrl)loadMinecraftInsideGallery(b).then(extra=>{if(extra.length&&window._openBuildModalId===b.id)renderBuildGallery(b,normalizeGalleryImages([...(b.images||[]),b.image,...extra]));});}
 
 function openPhotoViewer(index){if(!window._photoList||!window._photoList.length)return;window._photoIndex=Math.max(0,Math.min(index,window._photoList.length-1));updatePhotoViewer();document.getElementById("photoViewer").classList.add("show");}
 function updatePhotoViewer(){const img=document.getElementById("photoViewerImage"),count=document.getElementById("photoViewerCount");if(img)img.src=window._photoList?.[window._photoIndex]||"";if(count)count.textContent=(window._photoIndex+1)+" / "+(window._photoList?.length||1);}
@@ -10280,11 +10340,11 @@ function renderModrinthCatalog(){
  if(!modrinthState.loaded&&!modrinthState.loading&&!modrinthState.error){loadModrinthPage(0);return;}
  const local=builds.filter(x=>x.category==="Моды"&&!x.modrinth);
  grid.innerHTML=local.map(card).join("")+modrinthState.hits.map(hit=>{
-  const slug=hit.slug||hit.project_id,url="https://modrinth.com/mod/"+encodeURIComponent(slug),cover=hit.featured_gallery||hit.gallery?.[0]||hit.icon_url||"";
+  const slug=hit.slug||hit.project_id,url="https://modrinth.com/mod/"+encodeURIComponent(slug),cover=hit.featured_gallery||hit.gallery?.[0]||hit.icon_url||"",galleryKey="mod-"+hit.project_id,gallery=normalizeGalleryImages([cover,...(hit.gallery||[])]).slice(0,12);window.hmResourceGalleryStore=window.hmResourceGalleryStore||Object.create(null);window.hmResourceGalleryStore[galleryKey]={images:gallery,projectId:hit.project_id,apiType:"mod",sourceUrl:url};
   const tags=["Forge","1.20.1",...(hit.categories||[]).filter(c=>c!=="forge").slice(0,2)].map(x=>'<span class="tag">'+modrinthEscape(x)+'</span>').join("");
-  return '<article class="card modrinth-card"><div class="cover">'+(cover?'<img loading="lazy" src="'+modrinthEscape(cover)+'" alt="Обложка '+modrinthEscape(hit.title)+'" onerror="this.style.display=\'none\'">':'<div class="placeholder">⚒</div>')+'<div class="category">Modrinth · Forge</div></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">'+modrinthEscape(hit.title)+'</h3><div class="rating">⬇ '+Number(hit.downloads||0).toLocaleString("ru-RU")+'</div></div><p class="desc">'+modrinthEscape(hit.description||"Мод для Minecraft 1.20.1 на Forge.")+'</p><div class="tags">'+tags+'</div><div class="build-author"><div class="profile-text"><b>'+modrinthEscape(hit.author||"Автор Modrinth")+'</b><span>Minecraft 1.20.1 · Forge</span></div></div><div class="build-card-download-row"><a class="card-btn" href="'+modrinthEscape(url)+'" target="_blank" rel="noopener noreferrer">Описание →</a><button class="card-btn card-download-btn" type="button" data-modrinth-download="'+modrinthEscape(hit.project_id)+'" data-modrinth-slug="'+modrinthEscape(slug)+'">⬇ Скачать</button></div></div></article>';
+  return '<article class="card modrinth-card"><div class="cover">'+(cover?'<img loading="lazy" src="'+modrinthEscape(cover)+'" alt="Обложка '+modrinthEscape(hit.title)+'" onerror="this.style.display=\'none\'">':'<div class="placeholder">⚒</div>')+'<div class="category">Modrinth · Forge</div></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">'+modrinthEscape(hit.title)+'</h3><div class="rating">⬇ '+Number(hit.downloads||0).toLocaleString("ru-RU")+'</div></div><p class="desc">'+modrinthEscape(hit.description||"Мод для Minecraft 1.20.1 на Forge.")+'</p><div class="tags">'+tags+'</div><button class="catalog-gallery-btn" type="button" data-resource-gallery="'+modrinthEscape(galleryKey)+'">📸 Фото и скриншоты · '+gallery.length+'</button><div class="build-author"><div class="profile-text"><b>'+modrinthEscape(hit.author||"Автор Modrinth")+'</b><span>Minecraft 1.20.1 · Forge</span></div></div><div class="build-card-download-row"><a class="card-btn" href="'+modrinthEscape(url)+'" target="_blank" rel="noopener noreferrer">Описание →</a><button class="card-btn card-download-btn" type="button" data-modrinth-download="'+modrinthEscape(hit.project_id)+'" data-modrinth-slug="'+modrinthEscape(slug)+'">⬇ Скачать</button></div></div></article>';
  }).join("");
- grid.querySelectorAll("[data-modrinth-download]").forEach(b=>b.addEventListener("click",()=>downloadModrinthProject(b.dataset.modrinthDownload,b.dataset.modrinthSlug)));
+ grid.querySelectorAll("[data-modrinth-download]").forEach(b=>b.addEventListener("click",()=>downloadModrinthProject(b.dataset.modrinthDownload,b.dataset.modrinthSlug)));grid.querySelectorAll("[data-resource-gallery]").forEach(b=>b.addEventListener("click",()=>openResourceGallery(b.dataset.resourceGallery)));
  const status=document.getElementById("modrinthStatus"),page=Math.floor(modrinthState.offset/modrinthState.limit)+1;
  if(status)status.textContent=modrinthState.loading?"Загружаем моды Modrinth…":modrinthState.error?"Каталог не загрузился: "+modrinthState.error:"Найдено модов: "+modrinthState.total.toLocaleString("ru-RU")+" · страница "+page+" из "+modrinthPageCount()+" · Minecraft 1.20.1 / Forge";
  renderModrinthPager();
@@ -10329,16 +10389,16 @@ function renderPluginCatalog(){
  grid.innerHTML=pluginState.hits.map(project=>{
   const hangar=pluginState.source==="hangar",owner=project.namespace?.owner||"",slug=project.slug||project.name||project.project_id;
   const href=hangar?"https://hangar.papermc.io/"+encodeURIComponent(owner)+"/"+encodeURIComponent(project.namespace?.slug||slug):"https://modrinth.com/plugin/"+encodeURIComponent(project.slug||slug);
-  const cover=hangar?(project.avatarUrl||""):(project.featured_gallery||project.gallery?.[0]||project.icon_url||"");
+  const cover=hangar?(project.avatarUrl||""):(project.featured_gallery||project.gallery?.[0]||project.icon_url||""),galleryKey="plugin-"+(project.project_id||slug),gallery=normalizeGalleryImages([cover,...(project.gallery||project.images||[])]).slice(0,12);window.hmResourceGalleryStore=window.hmResourceGalleryStore||Object.create(null);window.hmResourceGalleryStore[galleryKey]={images:gallery,projectId:hangar?"":project.project_id,apiType:hangar?"":"plugin",sourceUrl:href};
   const title=project.name||project.title||slug,author=hangar?owner:(project.author||"Автор Modrinth"),count=hangar?Number(project.stats?.downloads||0):Number(project.downloads||0);
   const platforms=hangar?Object.entries(project.supportedPlatforms||{}).filter(([,v])=>Array.isArray(v)&&v.length).map(([p,v])=>p+" "+v.slice(-2).join(", ")):((project.versions||[]).slice(0,3).join(", ")||"Совместимость уточняй на странице");
   const tags=hangar?Object.keys(project.supportedPlatforms||{}).filter(p=>(project.supportedPlatforms[p]||[]).length):["Plugin",...(project.categories||[]).slice(0,2)];
   const tagHtml=tags.slice(0,4).map(t=>'<span class="tag">'+escapeHtml(t)+'</span>').join("");
   const image=cover?'<img loading="lazy" src="'+escapeHtml(cover)+'" alt="Иконка '+escapeHtml(title)+'" onerror="this.style.display=\'none\'">':'';
   const action=hangar?'<a class="card-btn card-download-btn" href="'+escapeHtml(href)+'" target="_blank" rel="noopener noreferrer">↗ Открыть и скачать</a>':'<button class="card-btn card-download-btn" type="button" data-plugin-download="'+escapeHtml(project.project_id)+'" data-plugin-slug="'+escapeHtml(project.slug||slug)+'">⬇ Скачать</button>';
-  return '<article class="card modrinth-card"><div class="cover">'+image+'<div class="placeholder">🔌</div><div class="category">'+(hangar?"Hangar · "+escapeHtml(tags[0]||"Plugin"):"Modrinth · Plugin")+'</div></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">'+escapeHtml(title)+'</h3><div class="rating">⬇ '+count.toLocaleString("ru-RU")+'</div></div><p class="desc">'+escapeHtml(project.description||project.tag||"Плагин для Minecraft-сервера.")+'</p><div class="tags">'+tagHtml+'</div><div class="build-author"><div class="profile-text"><b>'+escapeHtml(author)+'</b><span>'+escapeHtml(platforms||"Поддерживаемые платформы — на странице плагина")+'</span></div></div><div class="build-card-download-row"><a class="card-btn" href="'+escapeHtml(href)+'" target="_blank" rel="noopener noreferrer">Подробнее →</a>'+action+'</div></div></article>';
+  return '<article class="card modrinth-card"><div class="cover">'+image+'<div class="placeholder">🔌</div><div class="category">'+(hangar?"Hangar · "+escapeHtml(tags[0]||"Plugin"):"Modrinth · Plugin")+'</div></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">'+escapeHtml(title)+'</h3><div class="rating">⬇ '+count.toLocaleString("ru-RU")+'</div></div><p class="desc">'+escapeHtml(project.description||project.tag||"Плагин для Minecraft-сервера.")+'</p><div class="tags">'+tagHtml+'</div><button class="catalog-gallery-btn" type="button" data-resource-gallery="'+escapeHtml(galleryKey)+'">📸 Фото и скриншоты · '+gallery.length+'</button><div class="build-author"><div class="profile-text"><b>'+escapeHtml(author)+'</b><span>'+escapeHtml(platforms||"Поддерживаемые платформы — на странице плагина")+'</span></div></div><div class="build-card-download-row"><a class="card-btn" href="'+escapeHtml(href)+'" target="_blank" rel="noopener noreferrer">Подробнее →</a>'+action+'</div></div></article>';
  }).join("")||'<p class="plugin-empty">Плагины не найдены. Попробуй другой запрос или каталог.</p>';
- grid.querySelectorAll("[data-plugin-download]").forEach(button=>button.addEventListener("click",()=>downloadModrinthPlugin(button.dataset.pluginDownload,button.dataset.pluginSlug)));
+ grid.querySelectorAll("[data-plugin-download]").forEach(button=>button.addEventListener("click",()=>downloadModrinthPlugin(button.dataset.pluginDownload,button.dataset.pluginSlug)));grid.querySelectorAll("[data-resource-gallery]").forEach(button=>button.addEventListener("click",()=>openResourceGallery(button.dataset.resourceGallery)));
  const status=document.getElementById("pluginStatus"),page=Math.floor(pluginState.offset/pluginState.limit)+1;
  if(status)status.textContent=pluginState.loading?"Загружаем каталог…":pluginState.error?"Каталог временно недоступен: "+pluginState.error:(pluginState.source==="hangar"?"Hangar · ":"Modrinth · ")+"Найдено: "+pluginState.total.toLocaleString("ru-RU")+" · страница "+page+" из "+pluginPageCount();
  renderPluginPager();
