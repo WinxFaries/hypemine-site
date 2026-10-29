@@ -9752,11 +9752,13 @@ function setAuthMode(mode){
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAuthModal();});
 function authErrorMessage(error){
  const message=String(error?.message||"");
- if(/email_address_not_authorized/i.test(message))return "Пока Supabase не отправляет письма на этот адрес. Для теста добавь свой адрес в организацию или настрой SMTP.";
+ const code=String(error?.code||"").toLowerCase();
+ if(/email_address_not_authorized/i.test(message)||code==="email_address_not_authorized")return "Supabase не отправляет письма на этот адрес через встроенную почту. Для публичной регистрации настрой свой SMTP в Supabase.";
+ if(/over_email_send_rate_limit|email rate limit|rate limit.*email|too many emails/i.test(message+" "+code))return "Supabase временно ограничил отправку писем подтверждения. Встроенная почта ограничена и не предназначена для публичной регистрации. Подожди сброса лимита или настрой SMTP в Supabase.";
  if(/invalid login credentials/i.test(message))return "Почта или пароль неверны.";
  if(/email not confirmed/i.test(message))return "Сначала подтверди адрес по ссылке из письма.";
  if(/password should be at least|weak password/i.test(message))return "Выбери пароль длиной не менее 8 символов.";
- if(/rate limit|too many requests|429/i.test(message))return "Слишком много попыток. Подожди немного и повтори.";
+ if(/over_request_rate_limit|too many requests|rate limit|429/i.test(message+" "+code))return "Слишком много запросов с этого подключения. Подожди несколько минут перед следующей попыткой.";
  if(/failed to fetch|network/i.test(message))return "Не удалось связаться с Supabase. Проверь подключение к интернету.";
  return message||"Не удалось выполнить действие. Попробуй ещё раз.";
 }
