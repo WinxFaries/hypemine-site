@@ -3803,6 +3803,21 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 @keyframes hmEntryGridDrift{to{background-position:0 144px,144px 0}}
 @media(max-width:720px){.hm-entry-skip{top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}.hm-entry-3d-block.a{left:8%;top:30%}.hm-entry-3d-block.b{right:8%;top:58%}}
 @media(prefers-reduced-motion:reduce){.hm-entry-3d-grid,.hm-entry-3d-block,.hm-entry-track span{animation:none!important}}
+/* Deep, cinematic 3D backdrop: keep the voxel world visible around the glass panel */
+#hmEntryLoader{background:radial-gradient(ellipse at 50% 50%,rgba(61,75,183,.25),transparent 34%),radial-gradient(ellipse at 8% 22%,rgba(14,188,211,.2),transparent 30%),radial-gradient(ellipse at 92% 76%,rgba(167,66,232,.22),transparent 34%),linear-gradient(180deg,#080b17 0%,#090916 48%,#05070d 100%)}
+#hmEntryLoader:before{opacity:.34;background-size:44px 44px;background-image:linear-gradient(rgba(157,174,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(102,222,241,.1) 1px,transparent 1px);transform:perspective(900px) rotateX(8deg) scale(1.15)}
+.hm-entry-layout{width:min(960px,calc(100vw - 64px));min-height:min(560px,calc(100vh - 58px));background:linear-gradient(130deg,rgba(13,16,30,.48),rgba(8,12,24,.36));border-color:rgba(181,172,255,.28);box-shadow:0 35px 120px rgba(0,0,0,.42),0 0 90px rgba(82,91,224,.12),inset 0 1px rgba(255,255,255,.07);backdrop-filter:blur(8px)}
+.hm-entry-3d-grid{bottom:-28%;height:115%;transform:rotateX(67deg) rotateZ(-12deg);background-size:48px 48px;opacity:.9;filter:drop-shadow(0 0 12px rgba(104,141,255,.18))}
+.hm-entry-3d-horizon{top:10%;height:78%;background:radial-gradient(ellipse,rgba(75,120,255,.34),rgba(38,205,224,.16) 32%,rgba(140,61,221,.12) 56%,transparent 74%);filter:blur(22px)}
+.hm-entry-3d-block{filter:drop-shadow(0 15px 22px rgba(0,0,0,.4))}
+.hm-entry-3d-block.a{left:3%;top:42%;transform:rotateX(-24deg) rotateY(42deg) scale(1.48)}
+.hm-entry-3d-block.b{right:3%;top:64%;transform:rotateX(-24deg) rotateY(42deg) scale(1.4)}
+.hm-entry-3d-block.c{right:10%;top:15%;transform:rotateX(-24deg) rotateY(42deg) scale(1.1)}
+.hm-entry-3d-block.d{left:12%;top:14%;transform:rotateX(-24deg) rotateY(42deg) scale(1.1)}
+.hm-entry-3d-block.e{right:20%;top:82%;transform:rotateX(-24deg) rotateY(42deg) scale(1)}
+.hm-entry-visual{filter:drop-shadow(0 12px 45px rgba(103,109,255,.16))}
+.hm-entry-orbit{opacity:.9}
+@media(max-width:720px){.hm-entry-layout{width:calc(100vw - 28px);min-height:calc(100vh - 28px);background:linear-gradient(130deg,rgba(13,16,30,.58),rgba(8,12,24,.48));backdrop-filter:blur(6px)}.hm-entry-3d-block.a{left:-2%;top:28%;transform:rotateX(-24deg) rotateY(42deg) scale(1)}.hm-entry-3d-block.b{right:-2%;top:64%;transform:rotateX(-24deg) rotateY(42deg) scale(1)}}
 
 /* More visible immersive voxel environment */
 #hmEntryLoader{background:radial-gradient(ellipse at 50% 46%,rgba(85,77,214,.28),transparent 48%),radial-gradient(ellipse at 16% 70%,rgba(34,159,197,.15),transparent 34%),radial-gradient(ellipse at 88% 26%,rgba(142,74,227,.17),transparent 35%),#05060b}
@@ -3911,7 +3926,7 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
  const started=performance.now(),progress=document.getElementById("hmEntryProgress");
  tick=setInterval(()=>{if(!progress)return;const pct=Math.min(88,8+(performance.now()-started)/58);progress.style.width=pct+"%";},70);
  fallback=setTimeout(window.dismissHmEntry,60000);
- window.addEventListener("load",()=>setTimeout(window.dismissHmEntry,15000),{once:true});
+ window.addEventListener("load",()=>setTimeout(window.dismissHmEntry,25000),{once:true});
 })();
 </script><canvas id="galaxyCanvas"></canvas>
 <div id="hmAmbient" class="hm-ambient" aria-hidden="true"><div class="hm-ambient-stars"></div><div class="hm-ambient-glow a"></div><div class="hm-ambient-glow b"></div><div class="hm-ambient-glow c"></div><div class="hm-ambient-ribbon"></div></div>
