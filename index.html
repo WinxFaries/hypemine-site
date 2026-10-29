@@ -3949,6 +3949,7 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 .catalog-gallery-btn{width:100%;min-height:34px;margin-top:8px;border:1px solid rgba(153,132,255,.24);border-radius:8px;background:rgba(124,92,255,.08);color:#c5b8ff;font-size:10px;font-weight:900;cursor:pointer}
 .catalog-gallery-btn:hover{background:rgba(124,92,255,.16);border-color:rgba(153,132,255,.5)}
 .gallery-caption{grid-column:1/-1;color:#aeb5c7;font-size:11px;font-weight:800;letter-spacing:.25px;padding:2px 1px}
+.profile-main-card > :not(.hm-profile-banner-media){position:relative;z-index:1}
 </style>
 </head>
 
@@ -9842,7 +9843,7 @@ async function handleProfileBannerFile(event){
   if(file.size>10*1024*1024)throw new Error("Баннер должен быть меньше 10 МБ.");
   const client=window.hmSupabaseClient,user=window.hmSupabaseUser;if(!client||!user)throw new Error("Войди в аккаунт, чтобы загрузить баннер.");
   let blob=file;
-  const keepAnimation=file.type==="image/gif"||file.type==="image/webp"||isVideo;
+  const keepAnimation=file.type==="image/gif"||file.type==="image/webp"||file.type==="image/apng"||isVideo;
   if(isImage&&!keepAnimation){
    const source=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Не удалось прочитать изображение."));reader.readAsDataURL(file);});
    const img=new Image();img.src=source;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error("Не удалось открыть изображение."));});
@@ -9850,7 +9851,7 @@ async function handleProfileBannerFile(event){
    const scale=Math.max(width/img.naturalWidth,height/img.naturalHeight),sw=width/scale,sh=height/scale;ctx.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)/2,sw,sh,0,0,width,height);
    blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",.84));if(!blob)throw new Error("Не удалось подготовить баннер.");
   }
-  const storage=client.storage.from("hm-avatars"),ext=isVideo?".mp4":file.type==="image/gif"?".gif":file.type==="image/webp"?".webp":".webp",path=user.id+"/banner-"+Date.now()+ext;
+  const storage=client.storage.from("hm-avatars"),ext=isVideo?".mp4":file.type==="image/gif"?".gif":file.type==="image/apng"?".apng":file.type==="image/webp"?".webp":".webp",path=user.id+"/banner-"+Date.now()+ext;
   show("Загружаем баннер…");
   const {error:uploadError}=await storage.upload(path,blob,{upsert:false,cacheControl:"3600",contentType:blob.type||file.type});
   if(uploadError)throw uploadError;
