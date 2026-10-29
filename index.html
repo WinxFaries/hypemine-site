@@ -3756,7 +3756,7 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 @keyframes hmAmbientFloatA{to{transform:translate(18vw,12vh) scale(1.12)}}@keyframes hmAmbientFloatB{to{transform:translate(-15vw,17vh) scale(.9)}}@keyframes hmAmbientFloatC{to{transform:translate(11vw,-12vh) scale(1.15)}}@keyframes hmAmbientWave{to{transform:translate(5vw,3vh) rotate(-5deg);opacity:.55}}@keyframes hmAmbientStars{to{transform:translate(-11%,8%) rotate(8deg)}}@keyframes hmAmbientBreath{to{transform:scale(1.08);opacity:.75}}
 @media(max-width:700px){.hm-ambient-glow{filter:blur(82px);opacity:.25}.hm-ambient-ribbon{top:39%;height:28%}}
 @media(prefers-reduced-motion:reduce){.hm-ambient-stars,.hm-ambient-glow,.hm-ambient-ribbon,.hm-ambient:before{animation-duration:80s}}
-</style>
+.modrinth-toolbar{display:flex;flex-direction:column;gap:10px;margin:18px 0}.modrinth-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.modrinth-controls .search{flex:1;min-width:210px;max-width:480px}.modrinth-status{font-size:11px;color:var(--muted)}.modrinth-pager{display:flex;align-items:center;justify-content:center;gap:16px;margin:20px 0 8px;color:var(--muted);font-size:12px}.modrinth-card .cover img{object-fit:cover}.modrinth-card .build-card-download-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.modrinth-card .card-btn{display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}.modrinth-pager button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:600px){.modrinth-controls .settings-select{width:100%}.modrinth-card .build-card-download-row{grid-template-columns:1fr}}</style>
 
 
 <style id="hm-profile-hud-refresh">
@@ -4345,6 +4345,7 @@ style="margin-top:20px"
 Моды для Minecraft
 
 </p>
+<div class="modrinth-toolbar"><div class="modrinth-controls"><input id="modrinthSearch" class="search" type="search" placeholder="Найти мод на Modrinth…" onkeydown="if(event.key==='Enter')searchModrinth()"><button class="btn btn-primary" type="button" onclick="searchModrinth()">Найти</button><select id="modrinthSort" class="settings-select" aria-label="Сортировка модов" onchange="changeModrinthSort(this.value)"><option value="downloads">Сначала популярные</option><option value="updated">Недавно обновлённые</option><option value="newest">Новые</option></select></div><div id="modrinthStatus" class="modrinth-status">Подключаем каталог Modrinth…</div></div>
 
 
 
@@ -4357,7 +4358,9 @@ class="grid"
 style="margin-top:20px"
 
 ></div>
-<div class="external-catalog-card" style="margin:20px 0;padding:22px;border:1px solid var(--border);border-radius:13px;background:var(--card);grid-column:1/-1"><h3 style="margin:0 0 8px;font-size:17px">Полный каталог модов Minecraft Inside</h3><p class="subtitle" style="margin:0 0 15px;line-height:1.6">Выбери мод, открой его публикацию и скачай файл автора на Minecraft Inside.</p><a class="btn btn-primary" href="https://minecraft-inside.ru/mods/" target="_blank" rel="noopener noreferrer">Открыть каталог →</a></div>
+<div id="modrinthPager" class="modrinth-pager"></div>
+
+<div class="external-catalog-card" style="margin:20px 0;padding:22px;border:1px solid var(--border);border-radius:13px;background:var(--card);grid-column:1/-1"><h3 style="margin:0 0 8px;font-size:17px">Полный каталог модов Modrinth</h3><p class="subtitle" style="margin:0 0 15px;line-height:1.6">Каталог фильтруется по Minecraft 1.20.1, Forge и типу «мод».</p><a class="btn btn-primary" href="https://modrinth.com/mods?g=1.20.1&amp;l=forge" target="_blank" rel="noopener noreferrer">Открыть Modrinth →</a></div>
 
 
 
@@ -7207,7 +7210,7 @@ function renderAll(){
     filters.appendChild(btn);
   });
   renderCatalog("Сборки модов");
-  renderCategory("mapsGrid","Карты"); renderCategory("modsGrid","Моды");
+  renderCategory("mapsGrid","Карты"); renderModrinthCatalog();
   renderCategory("shadersGrid","Шейдеры"); renderCategory("pluginsGrid","Плагины");
   renderFavorites(); renderMusic(); updateAddBuildButton();
 }
@@ -10438,6 +10441,52 @@ document.addEventListener("click",()=>{
 const HM_AMBIENT_CLASSES=["hm-bg-aurora","hm-bg-nebula","hm-bg-ocean","hm-bg-sunset","hm-bg-emerald","hm-bg-off"];
 function changeAmbientStyle(value){const valid=["aurora","nebula","ocean","sunset","emerald","off"].includes(value)?value:"aurora";document.body.classList.remove(...HM_AMBIENT_CLASSES);document.body.classList.add("hm-bg-"+valid);localStorage.setItem("hm_ambient_style",valid);const select=document.getElementById("ambientStyleSelect");if(select)select.value=valid;}
 function applyAmbientStyle(){const value=localStorage.getItem("hm_ambient_style")||"aurora";changeAmbientStyle(value);}
+
+const MODRINTH_API="https://api.modrinth.com/v2";
+const modrinthState={hits:[],total:0,offset:0,limit:48,query:"",sort:"downloads",loading:false,loaded:false,error:""};
+function modrinthEscape(v){return escapeHtml(String(v||""));}
+function modrinthPageCount(){return Math.max(1,Math.ceil(modrinthState.total/modrinthState.limit));}
+function renderModrinthCatalog(){
+ const grid=document.getElementById("modsGrid");if(!grid)return;
+ if(!modrinthState.loaded&&!modrinthState.loading&&!modrinthState.error){loadModrinthPage(0);return;}
+ const local=builds.filter(x=>x.category==="Моды"&&!x.modrinth);
+ grid.innerHTML=local.map(card).join("")+modrinthState.hits.map(hit=>{
+  const slug=hit.slug||hit.project_id,url="https://modrinth.com/mod/"+encodeURIComponent(slug),cover=hit.featured_gallery||hit.gallery?.[0]||hit.icon_url||"";
+  const tags=["Forge","1.20.1",...(hit.categories||[]).filter(c=>c!=="forge").slice(0,2)].map(x=>'<span class="tag">'+modrinthEscape(x)+'</span>').join("");
+  return '<article class="card modrinth-card"><div class="cover">'+(cover?'<img loading="lazy" src="'+modrinthEscape(cover)+'" alt="Обложка '+modrinthEscape(hit.title)+'" onerror="this.style.display=\'none\'">':'<div class="placeholder">⚒</div>')+'<div class="category">Modrinth · Forge</div></div><div class="card-body"><div class="card-title-row"><h3 class="card-title">'+modrinthEscape(hit.title)+'</h3><div class="rating">⬇ '+Number(hit.downloads||0).toLocaleString("ru-RU")+'</div></div><p class="desc">'+modrinthEscape(hit.description||"Мод для Minecraft 1.20.1 на Forge.")+'</p><div class="tags">'+tags+'</div><div class="build-author"><div class="profile-text"><b>'+modrinthEscape(hit.author||"Автор Modrinth")+'</b><span>Minecraft 1.20.1 · Forge</span></div></div><div class="build-card-download-row"><a class="card-btn" href="'+modrinthEscape(url)+'" target="_blank" rel="noopener noreferrer">Описание →</a><button class="card-btn card-download-btn" type="button" data-modrinth-download="'+modrinthEscape(hit.project_id)+'" data-modrinth-slug="'+modrinthEscape(slug)+'">⬇ Скачать</button></div></div></article>';
+ }).join("");
+ grid.querySelectorAll("[data-modrinth-download]").forEach(b=>b.addEventListener("click",()=>downloadModrinthProject(b.dataset.modrinthDownload,b.dataset.modrinthSlug)));
+ const status=document.getElementById("modrinthStatus"),page=Math.floor(modrinthState.offset/modrinthState.limit)+1;
+ if(status)status.textContent=modrinthState.loading?"Загружаем моды Modrinth…":modrinthState.error?"Каталог не загрузился: "+modrinthState.error:"Найдено модов: "+modrinthState.total.toLocaleString("ru-RU")+" · страница "+page+" из "+modrinthPageCount()+" · Minecraft 1.20.1 / Forge";
+ renderModrinthPager();
+}
+function renderModrinthPager(){
+ const host=document.getElementById("modrinthPager");if(!host)return;
+ const page=Math.floor(modrinthState.offset/modrinthState.limit)+1,total=modrinthPageCount();
+ host.innerHTML='<button class="btn" type="button" '+(page<=1||modrinthState.loading?'disabled':'')+' data-mod-page="-1">← Назад</button><span>Страница '+page+' / '+total+'</span><button class="btn btn-primary" type="button" '+(page>=total||modrinthState.loading?'disabled':'')+' data-mod-page="1">Дальше →</button>';
+ host.querySelectorAll("[data-mod-page]").forEach(b=>b.addEventListener("click",()=>loadModrinthPage(modrinthState.offset+Number(b.dataset.modPage)*modrinthState.limit)));
+}
+async function loadModrinthPage(offset=0){
+ if(modrinthState.loading)return;modrinthState.loading=true;modrinthState.error="";modrinthState.offset=Math.max(0,offset);renderModrinthCatalog();
+ try{
+  const facets=JSON.stringify([["versions:1.20.1"],["categories:forge"],["project_type:mod"]]),url=new URL(MODRINTH_API+"/search");
+  url.searchParams.set("facets",facets);url.searchParams.set("limit",String(modrinthState.limit));url.searchParams.set("offset",String(modrinthState.offset));url.searchParams.set("index",modrinthState.sort);if(modrinthState.query)url.searchParams.set("query",modrinthState.query);
+  const response=await fetch(url.href,{headers:{Accept:"application/json"}});if(!response.ok)throw new Error("HTTP "+response.status);
+  const data=await response.json();modrinthState.hits=Array.isArray(data.hits)?data.hits:[];modrinthState.total=Number(data.total_hits)||0;modrinthState.loaded=true;
+ }catch(e){modrinthState.error=e.message||"ошибка сети";modrinthState.hits=[];modrinthState.total=0;}
+ finally{modrinthState.loading=false;renderModrinthCatalog();}
+}
+function searchModrinth(){modrinthState.query=(document.getElementById("modrinthSearch")?.value||"").trim();loadModrinthPage(0);}
+function changeModrinthSort(v){modrinthState.sort=["downloads","updated","newest"].includes(v)?v:"downloads";loadModrinthPage(0);}
+async function downloadModrinthProject(id,slug){
+ const tab=window.open("about:blank","_blank");
+ try{
+  const p=new URLSearchParams();p.set("loaders",JSON.stringify(["forge"]));p.set("game_versions",JSON.stringify(["1.20.1"]));p.set("include_changelog","false");
+  const r=await fetch(MODRINTH_API+"/project/"+encodeURIComponent(id)+"/version?"+p.toString(),{headers:{Accept:"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);
+  const versions=await r.json(),v=versions.find(x=>x.game_versions?.includes("1.20.1")&&x.loaders?.includes("forge")),f=v?.files?.find(x=>x.primary)||v?.files?.[0];if(!f?.url)throw new Error("Файл не найден");
+  if(tab)tab.location.href=f.url;else window.location.href=f.url;
+ }catch(e){const fallback="https://modrinth.com/mod/"+encodeURIComponent(slug||id)+"/versions?g=1.20.1&l=forge";if(tab)tab.location.href=fallback;else window.open(fallback,"_blank","noopener,noreferrer");}
+}
 
 /* EXTRA VISUAL FUNCTIONS */
 
