@@ -70,6 +70,11 @@ create policy "HypeMine avatars upload own folder"
 on storage.objects for insert to authenticated
 with check (bucket_id = 'hm-avatars' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
+drop policy if exists "HypeMine avatars read own folder" on storage.objects;
+create policy "HypeMine avatars read own folder"
+on storage.objects for select to authenticated
+using (bucket_id = 'hm-avatars' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
 drop policy if exists "HypeMine avatars update own folder" on storage.objects;
 create policy "HypeMine avatars update own folder"
 on storage.objects for update to authenticated
