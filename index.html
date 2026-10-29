@@ -9554,14 +9554,6 @@ async function editProfile(){
 
 
 
-function editProfile(){
-  // Пока серверной авторизации нет, профиль не редактируем через браузерные prompt-окна.
-  // Показываем единое фирменное окно и оставляем гостевые данные локальными.
-  openAuthModal(getAccount()?"login":"register");
-}
-
-
-
 function changeAvatar(){setAuthStatus("Загрузка аватара появится после настройки защищённого хранения файлов.","info");}
 function handleAvatarFile(){return;}
 async function logoutProfile(){
