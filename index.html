@@ -4418,7 +4418,7 @@ style="margin-top:20px"
     <select id="pluginSource" class="settings-select" aria-label="Источник плагинов" onchange="changePluginSource(this.value)"><option value="hangar">Hangar · Paper / Velocity</option><option value="modrinth">Modrinth · plugin проекты</option></select>
     <input id="pluginSearch" class="search" type="search" placeholder="Найти плагин…" onkeydown="if(event.key==='Enter')searchPlugins()">
     <button class="btn btn-primary" type="button" onclick="searchPlugins()">Найти</button>
-    <select id="pluginSort" class="settings-select" aria-label="Сортировка плагинов" onchange="changePluginSort(this.value)"><option value="downloads">Сначала популярные</option><option value="updated">Недавно обновлённые</option><option value="newest">Новые</option></select>
+    <select id="pluginSort" class="settings-select" aria-label="Сортировка плагинов" onchange="changePluginSort(this.value)" disabled><option value="downloads">Сначала популярные</option><option value="updated">Недавно обновлённые</option><option value="newest">Новые</option></select>
   </div><div id="pluginStatus" class="modrinth-status">Подключаем каталоги плагинов…</div></div>
   <div id="pluginsGrid" class="grid" style="margin-top:20px"></div><div id="pluginPager" class="modrinth-pager"></div>
   <div class="external-catalog-card" style="margin:20px 0;padding:22px;border:1px solid var(--border);border-radius:13px;background:var(--card)"><h3 style="margin:0 0 8px;font-size:17px">Ещё каталоги плагинов</h3><p class="subtitle" style="margin:0 0 15px;line-height:1.6">Открой SpigotMC, чтобы просмотреть плагины Bukkit/Spigot и страницы авторов.</p><a class="btn" href="https://www.spigotmc.org/resources/" target="_blank" rel="noopener noreferrer">Открыть SpigotMC →</a></div>
