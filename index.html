@@ -3928,6 +3928,23 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 @keyframes hmProfileEditorFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:480px){.hm-profile-editor{padding:25px 20px}.hm-profile-editor-actions{flex-direction:column-reverse}.hm-profile-editor-actions .btn{width:100%}}
 </style>
+<style id="hm-profile-banner-style">
+.profile-main-card{isolation:isolate}
+.hm-profile-banner-media{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:inherit;pointer-events:none;background:#11131c}
+.hm-profile-banner-media[hidden]{display:none}
+.hm-profile-banner-media img,.hm-profile-banner-media video{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.42}
+.hm-profile-banner-media:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(14,14,26,.78),rgba(14,14,26,.4) 58%,rgba(14,14,26,.56)),linear-gradient(0deg,rgba(13,14,23,.72),transparent 58%)}
+.profile-main-card:after{z-index:0}
+.hm-profile-editor{max-height:min(90vh,760px);overflow-y:auto}
+.hm-profile-banner-settings{margin-top:19px;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(255,255,255,.025)}
+.hm-profile-banner-settings>div:first-child b,.hm-profile-banner-settings>div:first-child span{display:block}
+.hm-profile-banner-settings>div:first-child b{font-size:11px}
+.hm-profile-banner-settings>div:first-child span{margin-top:5px;color:var(--muted);font-size:10px;line-height:1.5}
+.hm-profile-banner-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.hm-profile-banner-actions .btn{min-height:36px;font-size:10px}
+.hm-profile-banner-actions [hidden]{display:none!important}
+@media(max-width:480px){.hm-profile-banner-actions{flex-direction:column}.hm-profile-banner-actions .btn{width:100%}}
+</style>
 </head>
 
 
@@ -5052,7 +5069,7 @@ class="track-list"
 
 
 
-<div class="profile-box profile-main-card">
+<div class="profile-box profile-main-card"><div id="profileBannerMedia" class="hm-profile-banner-media" aria-hidden="true" hidden></div>
 
   <div class="profile-avatar-wrap">
 
@@ -9565,7 +9582,7 @@ function getAccount(){
   const email=user.email||"";
   const name=String(metadata.username||metadata.display_name||metadata.name||email.split("@")[0]||"Игрок").trim();
   const avatar=metadata.avatar_url||metadata.picture||"👤";
-  return {id:user.id,name,email,avatar,avatarType:avatar==="👤"?"emoji":"image",premium:false,createdAt:user.created_at||"",emailVerified:!!(user.email_confirmed_at||user.confirmed_at)};
+  return {id:user.id,name,email,avatar,avatarType:avatar==="👤"?"emoji":"image",bannerUrl:metadata.banner_url||"",bannerType:metadata.banner_type||"image",bannerPath:metadata.banner_path||"",premium:false,createdAt:user.created_at||"",emailVerified:!!(user.email_confirmed_at||user.confirmed_at)};
 }
 
 
@@ -9653,6 +9670,7 @@ function editProfile(){
  const input=document.getElementById("hmProfileDisplayName");
  if(input)input.value=account.name||"";
  const status=document.getElementById("hmProfileEditStatus");if(status){status.hidden=true;status.textContent="";status.classList.remove("error");}
+ const removeBanner=document.getElementById("hmProfileRemoveBanner");if(removeBanner)removeBanner.hidden=!account.bannerUrl;
  const modal=document.getElementById("hmProfileEditor");if(!modal)return;
  modal.classList.add("active");modal.setAttribute("aria-hidden","false");
  setTimeout(()=>input?.focus(),40);
@@ -9744,8 +9762,64 @@ async function logoutProfile(){
 
 
 
+function renderProfileBanner(account){
+ const host=document.getElementById("profileBannerMedia");if(!host)return;
+ host.replaceChildren();const src=String(account?.bannerUrl||"");
+ if(!src){host.hidden=true;return;}
+ if(account.bannerType==="video"){
+  const video=document.createElement("video");video.autoplay=true;video.muted=true;video.loop=true;video.playsInline=true;video.setAttribute("aria-hidden","true");
+  const source=document.createElement("source");source.src=src.split("?v=")[0];source.type="video/mp4";video.appendChild(source);host.appendChild(video);
+ }else{const image=document.createElement("img");image.src=src;image.alt="";image.decoding="async";host.appendChild(image);}
+ host.hidden=false;
+}
+async function handleProfileBannerFile(event){
+ const input=event?.target,file=input?.files?.[0];if(!file)return;
+ const status=document.getElementById("hmProfileEditStatus");
+ const show=(message,error=false)=>{if(status){status.textContent=message;status.hidden=false;status.classList.toggle("error",error);}};
+ try{
+  const isImage=file.type.startsWith("image/"),isVideo=file.type==="video/mp4";
+  if(!isImage&&!isVideo)throw new Error("Выбери фото, GIF, WebP или видео MP4.");
+  if(file.size>10*1024*1024)throw new Error("Баннер должен быть меньше 10 МБ.");
+  const client=window.hmSupabaseClient,user=window.hmSupabaseUser;if(!client||!user)throw new Error("Войди в аккаунт, чтобы загрузить баннер.");
+  let blob=file;
+  const keepAnimation=file.type==="image/gif"||file.type==="image/webp"||isVideo;
+  if(isImage&&!keepAnimation){
+   const source=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Не удалось прочитать изображение."));reader.readAsDataURL(file);});
+   const img=new Image();img.src=source;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error("Не удалось открыть изображение."));});
+   const width=1500,height=500,canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Браузер не смог обработать изображение.");
+   const scale=Math.max(width/img.naturalWidth,height/img.naturalHeight),sw=width/scale,sh=height/scale;ctx.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)/2,sw,sh,0,0,width,height);
+   blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",.84));if(!blob)throw new Error("Не удалось подготовить баннер.");
+  }
+  const storage=client.storage.from("hm-avatars"),ext=isVideo?".mp4":file.type==="image/gif"?".gif":file.type==="image/webp"?".webp":".webp",path=user.id+"/banner-"+Date.now()+ext;
+  show("Загружаем баннер…");
+  const {error:uploadError}=await storage.upload(path,blob,{upsert:false,cacheControl:"3600",contentType:blob.type||file.type});
+  if(uploadError)throw uploadError;
+  const url=storage.getPublicUrl(path).data.publicUrl+"?v="+Date.now(),oldPath=getAccount()?.bannerPath||"";
+  const {data,error}=await client.auth.updateUser({data:{banner_url:url,banner_type:isVideo?"video":"image",banner_path:path}});
+  if(error){await storage.remove([path]);throw error;}
+  if(data?.user)window.hmSupabaseUser=data.user;
+  loadProfile();show("Баннер профиля обновлён.");
+  if(oldPath&&oldPath!==path&&oldPath.startsWith(user.id+"/banner-"))storage.remove([oldPath]).catch(()=>{});
+ }catch(error){show(error.message||"Не удалось загрузить баннер.",true);}
+ finally{if(input)input.value="";}
+}
+async function removeProfileBanner(){
+ const account=getAccount(),client=window.hmSupabaseClient,status=document.getElementById("hmProfileEditStatus");if(!account||!client)return;
+ const button=document.getElementById("hmProfileRemoveBanner");if(button)button.disabled=true;
+ if(status){status.hidden=false;status.classList.remove("error");status.textContent="Удаляем баннер…";}
+ try{
+  const {data,error}=await client.auth.updateUser({data:{banner_url:null,banner_type:null,banner_path:null}});
+  if(error)throw error;if(data?.user)window.hmSupabaseUser=data.user;
+  if(account.bannerPath&&account.bannerPath.startsWith(account.id+"/banner-"))await client.storage.from("hm-avatars").remove([account.bannerPath]);
+  loadProfile();if(status){status.hidden=false;status.textContent="Баннер удалён.";}
+  const remove=document.getElementById("hmProfileRemoveBanner");if(remove)remove.hidden=true;
+ }catch(error){if(status){status.hidden=false;status.classList.add("error");status.textContent=error.message||"Не удалось удалить баннер.";}}
+ finally{if(button)button.disabled=false;}
+}
+
 function loadProfile(){
  const account=getAccount();
+ renderProfileBanner(account);
  const hudStatus=document.getElementById("profileHudStatus"),hudHint=document.getElementById("profileHudStatusHint"),hudMeter=document.getElementById("profileHudMeter"),hudProgress=document.getElementById("profileHudProgress");
  if(hudStatus)hudStatus.textContent=account?"Подтверждённый аккаунт":"Гость";
  if(hudHint)hudHint.textContent=account?(account.emailVerified?"Почта подтверждена":"Почта ожидает подтверждения"):"Войди, чтобы пользоваться профилем на этом устройстве";
@@ -10978,7 +11052,7 @@ applyAmbientStyle();
 
 
 
-<div id="hmProfileEditor" class="hm-profile-editor-overlay" aria-hidden="true" onclick="if(event.target===this)closeProfileEditor()"><section class="hm-profile-editor" role="dialog" aria-modal="true" aria-labelledby="hmProfileEditorTitle"><button class="hm-profile-editor-close" type="button" aria-label="Закрыть" onclick="closeProfileEditor()">×</button><div class="hm-profile-editor-kicker">HYPEMINE ACCOUNT</div><h2 id="hmProfileEditorTitle">Настройки профиля</h2><p class="hm-profile-editor-copy">Измени отображаемый никнейм или выбери фото профиля.</p><form onsubmit="saveProfileChanges(event)"><label class="hm-profile-editor-field">Никнейм<input id="hmProfileDisplayName" type="text" minlength="2" maxlength="32" autocomplete="nickname" required></label><div id="hmProfileEditStatus" class="hm-profile-edit-status" role="status" aria-live="polite" hidden></div><div class="hm-profile-editor-actions"><button type="button" class="btn" onclick="closeProfileEditor();changeAvatar()">📷 Выбрать фото</button><button id="hmProfileSave" type="submit" class="btn btn-primary">Сохранить изменения</button></div><button type="button" class="hm-profile-password-link" onclick="sendProfilePasswordReset()">Отправить ссылку для смены пароля</button></form></section></div>
+<div id="hmProfileEditor" class="hm-profile-editor-overlay" aria-hidden="true" onclick="if(event.target===this)closeProfileEditor()"><section class="hm-profile-editor" role="dialog" aria-modal="true" aria-labelledby="hmProfileEditorTitle"><button class="hm-profile-editor-close" type="button" aria-label="Закрыть" onclick="closeProfileEditor()">×</button><div class="hm-profile-editor-kicker">HYPEMINE ACCOUNT</div><h2 id="hmProfileEditorTitle">Настройки профиля</h2><p class="hm-profile-editor-copy">Измени отображаемый никнейм или выбери фото профиля.</p><form onsubmit="saveProfileChanges(event)"><label class="hm-profile-editor-field">Никнейм<input id="hmProfileDisplayName" type="text" minlength="2" maxlength="32" autocomplete="nickname" required></label><div class="hm-profile-banner-settings"><div><b>Баннер профиля</b><span>Фото, GIF, анимированный WebP или MP4 · до 10 МБ</span></div><input id="hmProfileBannerInput" type="file" accept="image/*,video/mp4" hidden onchange="handleProfileBannerFile(event)"><div class="hm-profile-banner-actions"><button type="button" class="btn" onclick="document.getElementById('hmProfileBannerInput').click()">🖼 Выбрать баннер</button><button id="hmProfileRemoveBanner" type="button" class="btn danger-btn" onclick="removeProfileBanner()" hidden>Удалить</button></div></div><div id="hmProfileEditStatus" class="hm-profile-edit-status" role="status" aria-live="polite" hidden></div><div class="hm-profile-editor-actions"><button type="button" class="btn" onclick="closeProfileEditor();changeAvatar()">📷 Выбрать фото</button><button id="hmProfileSave" type="submit" class="btn btn-primary">Сохранить изменения</button></div><button type="button" class="hm-profile-password-link" onclick="sendProfilePasswordReset()">Отправить ссылку для смены пароля</button></form></section></div>
 <div id="hmAuthModal" class="hm-auth-overlay" aria-hidden="true" onclick="if(event.target===this)closeAuthModal()"><section class="hm-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="hmAuthTitle"><button class="hm-auth-close" type="button" aria-label="Закрыть" onclick="closeAuthModal()">×</button><div class="hm-auth-visual"><div class="hm-auth-orbit hm-auth-orbit-a"></div><div class="hm-auth-orbit hm-auth-orbit-b"></div><div class="hm-auth-logo">HM</div><span class="hm-auth-kicker">HYPEMINE ACCOUNT</span><h2 id="hmAuthTitle">Твоя игровая зона</h2><p>Собирай любимые карты, моды и шейдеры в одном месте.</p><div class="hm-auth-mini-stats"><span>✦ Твоя коллекция</span><span>⌁ Настройки профиля</span></div></div><div class="hm-auth-form-wrap"><div id="hmAuthTabs" class="hm-auth-tabs"><button id="hmAuthTabLogin" type="button" onclick="setAuthMode('login')">Вход</button><button id="hmAuthTabRegister" type="button" onclick="setAuthMode('register')">Регистрация</button></div><h3 id="hmAuthHeading">Создай свой профиль</h3><p id="hmAuthSubheading">Подтверди почту, чтобы защитить свой аккаунт.</p><form id="hmAuthForm" class="hm-auth-form" onsubmit="handleAuthSubmit(event)"><label id="hmAuthEmailField" class="hm-auth-field">Электронная почта<input id="hmAuthEmail" type="email" autocomplete="email" placeholder="name@example.com" maxlength="254" required></label><label id="hmAuthNameField" class="hm-auth-field">Имя пользователя<input id="hmAuthName" type="text" autocomplete="nickname" placeholder="Твой никнейм" minlength="2" maxlength="32" required></label><label id="hmAuthPasswordLabel" class="hm-auth-field">Пароль<input id="hmAuthPassword" type="password" autocomplete="new-password" placeholder="Не менее 8 символов" minlength="8" maxlength="128" required></label><button id="hmAuthForgot" class="hm-auth-forgot" type="button" onclick="requestPasswordReset()" hidden>Забыли пароль?</button><div id="hmAuthStatus" class="hm-auth-status" role="status" aria-live="polite" hidden></div><button id="hmAuthSubmit" class="hm-auth-submit" type="submit">Создать аккаунт</button></form><p id="hmAuthSecureNote" class="hm-auth-secure-note"><span>🔒</span><span>Пароль проверяет Supabase Auth; сайт не записывает его в свой профиль.</span></p><button class="hm-auth-later" type="button" onclick="closeAuthModal()">Продолжить как гость</button></div></section></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
