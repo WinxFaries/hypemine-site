@@ -9598,23 +9598,9 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAuthModal();});
 
 
 function editProfile(){
-
-  const account=getAccount();
-
-  if(!account){registerOrLogin();return;}
-
-  const name=prompt("Новый никнейм:",account.name);
-
-  if(name && name.trim())account.name=name.trim();
-
-  const email=prompt("Новый email:",account.email);
-
-  if(email && email.trim())account.email=email.trim();
-
-  localStorage.setItem("hm_account",JSON.stringify(account));
-
-  loadProfile();
-
+  // Пока серверной авторизации нет, профиль не редактируем через браузерные prompt-окна.
+  // Показываем единое фирменное окно и оставляем гостевые данные локальными.
+  openAuthModal(getAccount()?"login":"register");
 }
 
 
