@@ -7326,9 +7326,8 @@ async function loadSourcePageGallery(sourceUrl){
  if(hmSourceGalleryCache.has(url.href))return hmSourceGalleryCache.get(url.href);
  const task=(async()=>{
   const proxies=[
-   "https://api.allorigins.win/raw?url="+encodeURIComponent(url.href),
-   "https://corsproxy.io/?url="+encodeURIComponent(url.href),
-   "https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(url.href)
+   "https://proxy.cors.dev/"+url.href,
+   "https://api.allorigins.win/raw?url="+encodeURIComponent(url.href)
   ];
   let html="";
   for(const proxy of proxies){
@@ -7351,14 +7350,14 @@ async function loadSourcePageGallery(sourceUrl){
     const inGallery=/gallery|screenshot|photo|image|fotorama|swiper|slider/.test(contextText);
     const isUploaded=/\/uploads?\//i.test(path)||/gallery|screenshots|\/images?\//i.test(path);
     if(!inGallery&&!isUploaded)return;
-    const clean=imageUrl.href.split("#")[0];
+    const clean=imageUrl.href.replace(/\/(?:mini|thumb)\//i,"/").split("#")[0];
     if(!found.includes(clean))found.push(clean);
    }catch(_){}
   };
   const galleryNodes=doc.querySelectorAll('[class*="gallery" i],[id*="gallery" i],[class*="screenshot" i],[id*="screenshot" i],[class*="fotorama" i],[class*="swiper" i],[class*="slider" i],article,main,.content,.post-content');
   for(const box of galleryNodes){
    for(const node of box.querySelectorAll("img,a[href],source")){
-    for(const attr of ["data-original","data-src","data-lazy-src","data-zoom-image","data-image","src","href","srcset","data-srcset"]){
+    for(const attr of ["data-big","data-original","data-src","data-lazy-src","data-zoom-image","data-image","href","src","srcset","data-srcset"]){
      const value=node.getAttribute(attr);if(!value)continue;
      for(const candidate of value.split(",").map(x=>x.trim().split(/\s+/)[0]))add(candidate,box);
     }
