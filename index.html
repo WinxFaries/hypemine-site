@@ -3778,6 +3778,31 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 .hm-auth-secure-note{border-color:rgba(151,124,255,.18);color:#b8b4c8;background:rgba(124,92,255,.06);font-size:10px}.hm-auth-secure-note span:last-child{flex:1 1 auto;min-width:0}
 .profile-main-card .avatar-edit{display:none!important}
 @media(max-width:680px){.hm-auth-dialog{max-height:96vh}.hm-auth-visual{min-height:175px}.hm-auth-visual h2{font-size:22px}}
+
+/* Lightweight CSS-only voxel world behind the intro card */
+#hmEntryLoader{isolation:isolate}
+.hm-entry-3d-scene{position:absolute;inset:0;overflow:hidden;perspective:1000px;pointer-events:none;z-index:0}
+.hm-entry-3d-grid{position:absolute;left:-38%;right:-38%;bottom:-49%;height:93%;transform:rotateX(63deg) rotateZ(-12deg);transform-origin:center top;background-image:linear-gradient(rgba(131,139,255,.19) 1px,transparent 1px),linear-gradient(90deg,rgba(92,206,238,.15) 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(transparent,#000 20%,#000 72%,transparent);opacity:.52;animation:hmEntryGridDrift 30s linear infinite}
+.hm-entry-3d-horizon{position:absolute;left:10%;right:10%;top:24%;height:42%;background:radial-gradient(ellipse,rgba(75,123,255,.17),rgba(46,202,219,.06) 38%,transparent 72%);filter:blur(22px)}
+.hm-entry-3d-block{position:absolute;width:44px;height:44px;transform-style:preserve-3d;animation:hmEntryBlockFloat 5s ease-in-out infinite}
+.hm-entry-3d-block i{position:absolute;display:block;width:44px;height:44px;border:1px solid rgba(173,163,255,.35);backface-visibility:hidden}
+.hm-entry-3d-block .front{transform:translateZ(22px);background:linear-gradient(145deg,rgba(130,102,255,.18),rgba(41,71,145,.09))}
+.hm-entry-3d-block .right{transform:rotateY(90deg) translateZ(22px);background:linear-gradient(145deg,rgba(67,209,232,.18),rgba(34,87,139,.08))}
+.hm-entry-3d-block .top{transform:rotateX(90deg) translateZ(22px);background:linear-gradient(145deg,rgba(201,188,255,.22),rgba(99,113,223,.1))}
+.hm-entry-3d-block.a{left:13%;top:35%;transform:rotateX(-24deg) rotateY(42deg) scale(1.12)}
+.hm-entry-3d-block.b{right:14%;top:62%;width:30px;height:30px;animation-delay:-1.8s;transform:rotateX(-24deg) rotateY(42deg) scale(.72)}
+.hm-entry-3d-block.b i{width:30px;height:30px}.hm-entry-3d-block.b .front{transform:translateZ(15px)}.hm-entry-3d-block.b .right{transform:rotateY(90deg) translateZ(15px)}.hm-entry-3d-block.b .top{transform:rotateX(90deg) translateZ(15px)}
+.hm-entry-3d-block.c{right:25%;top:20%;width:22px;height:22px;animation-delay:-3s;transform:rotateX(-24deg) rotateY(42deg) scale(.54)}
+.hm-entry-3d-block.c i{width:22px;height:22px}.hm-entry-3d-block.c .front{transform:translateZ(11px)}.hm-entry-3d-block.c .right{transform:rotateY(90deg) translateZ(11px)}.hm-entry-3d-block.c .top{transform:rotateX(90deg) translateZ(11px)}
+.hm-entry-skip{position:fixed;z-index:100002;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));min-height:42px;padding:0 15px;border-color:rgba(184,169,255,.36);color:#f2efff;background:rgba(15,17,29,.94);box-shadow:0 8px 28px rgba(0,0,0,.36);font-size:12px;font-weight:800;pointer-events:auto}
+.hm-entry-skip:hover{background:#282143;transform:translateY(-1px)}
+.hm-entry-bottom{grid-template-columns:1fr}
+.hm-entry-track span{width:20%;animation:hmEntryTrack 1.6s cubic-bezier(.4,0,.2,1) infinite alternate}
+@keyframes hmEntryTrack{from{transform:translateX(0);width:16%}to{transform:translateX(390%);width:26%}}
+@keyframes hmEntryBlockFloat{0%,100%{translate:0 0}50%{translate:0 -14px}}
+@keyframes hmEntryGridDrift{to{background-position:0 144px,144px 0}}
+@media(max-width:720px){.hm-entry-skip{top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}.hm-entry-3d-block.a{left:8%;top:30%}.hm-entry-3d-block.b{right:8%;top:58%}}
+@media(prefers-reduced-motion:reduce){.hm-entry-3d-grid,.hm-entry-3d-block,.hm-entry-track span{animation:none!important}}
 </style>
 
 
@@ -3846,11 +3871,28 @@ body.hm-bg-off .hm-ambient{opacity:0;visibility:hidden}
 
 
 <body>
-<div id="hmEntryLoader" role="status" aria-live="polite"><button class="hm-entry-skip" type="button" onclick="dismissHmEntry()">Пропустить загрузку</button><div class="hm-entry-layout"><div class="hm-entry-copy"><div class="hm-entry-kicker">Minecraft resource hub</div><div class="hm-entry-title">Твой мир.<span>Твои правила.</span></div><div class="hm-entry-sub">Подготавливаем подборки Minecraft — карты, сборки, моды и шейдеры уже на подходе.</div><div class="hm-entry-pills"><span><b>50+</b> карт</span><span><b>50</b> шейдеров</span><span><b>∞</b> идей</span></div></div><div class="hm-entry-visual" aria-hidden="true"><div class="hm-entry-orbit one"></div><div class="hm-entry-orbit two"></div><div class="hm-entry-orbit three"></div><i class="hm-entry-star a"></i><i class="hm-entry-star b"></i><i class="hm-entry-star c"></i><i class="hm-entry-star d"></i><i class="hm-entry-voxel a"></i><i class="hm-entry-voxel b"></i><i class="hm-entry-voxel c"></i><div class="hm-entry-cube"><svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hmCubeTop" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#c5baff"/><stop offset="1" stop-color="#8873fa"/></linearGradient><linearGradient id="hmCubeLeft" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#9179ff"/><stop offset="1" stop-color="#5145cf"/></linearGradient><linearGradient id="hmCubeRight" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#62d5e9"/><stop offset="1" stop-color="#3976ce"/></linearGradient></defs><path d="M96 18 163 56 96 94 29 56Z" fill="url(#hmCubeTop)" stroke="#e5dfff" stroke-opacity=".72" stroke-width="2"/><path d="M29 56 96 94 96 174 29 136Z" fill="url(#hmCubeLeft)" stroke="#d8ceff" stroke-opacity=".52" stroke-width="2"/><path d="M163 56 96 94 96 174 163 136Z" fill="url(#hmCubeRight)" stroke="#c5f9ff" stroke-opacity=".65" stroke-width="2"/><path d="m48 67 30 17v12L48 79Zm0 27 30 17v12L48 106Zm0 27 30 17v12L48 133Z" fill="#dcd4ff" fill-opacity=".35"/><path d="m113 82 30-17v12l-30 17Zm0 27 30-17v12l-30 17Zm0 27 30-17v12l-30 17Z" fill="#e2fcff" fill-opacity=".43"/><path d="m96 18 0 76" stroke="#fff" stroke-opacity=".48"/><circle cx="96" cy="54" r="8" fill="#fff" fill-opacity=".72" filter="url(#hmGlow)"/></svg></div></div><div class="hm-entry-bottom"><div class="hm-entry-status" id="hmEntryStatus">Собираем миры и материалы</div><div class="hm-entry-percent" id="hmEntryPct">00%</div><div class="hm-entry-track" aria-hidden="true"><span id="hmEntryProgress"></span></div></div></div></div>
+<div id="hmEntryLoader" role="region" aria-label="Заставка HypeMine Builds"><div class="hm-entry-3d-scene" aria-hidden="true"><div class="hm-entry-3d-grid"></div><div class="hm-entry-3d-horizon"></div><div class="hm-entry-3d-block a"><i class="front"></i><i class="right"></i><i class="top"></i></div><div class="hm-entry-3d-block b"><i class="front"></i><i class="right"></i><i class="top"></i></div><div class="hm-entry-3d-block c"><i class="front"></i><i class="right"></i><i class="top"></i></div></div><button class="hm-entry-skip" type="button" onclick="dismissHmEntry()" aria-label="Пропустить заставку">Пропустить</button><div class="hm-entry-layout"><div class="hm-entry-copy"><div class="hm-entry-kicker">Minecraft resource hub</div><div class="hm-entry-title">Твой мир.<span>Твои правила.</span></div><div class="hm-entry-sub">Карты, сборки, моды, шейдеры и плагины Minecraft — каталоги уже доступны. Выбирай материалы и переходи к оригинальным страницам загрузки.</div><div class="hm-entry-pills"><span><b>Карты</b> Minecraft</span><span><b>Моды</b> и сборки</span><span><b>Шейдеры</b> и плагины</span></div></div><div class="hm-entry-visual" aria-hidden="true"><div class="hm-entry-orbit one"></div><div class="hm-entry-orbit two"></div><div class="hm-entry-orbit three"></div><i class="hm-entry-star a"></i><i class="hm-entry-star b"></i><i class="hm-entry-star c"></i><i class="hm-entry-star d"></i><i class="hm-entry-voxel a"></i><i class="hm-entry-voxel b"></i><i class="hm-entry-voxel c"></i><div class="hm-entry-cube"><svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hmCubeTop" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#c5baff"/><stop offset="1" stop-color="#8873fa"/></linearGradient><linearGradient id="hmCubeLeft" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#9179ff"/><stop offset="1" stop-color="#5145cf"/></linearGradient><linearGradient id="hmCubeRight" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#62d5e9"/><stop offset="1" stop-color="#3976ce"/></linearGradient></defs><path d="M96 18 163 56 96 94 29 56Z" fill="url(#hmCubeTop)" stroke="#e5dfff" stroke-opacity=".72" stroke-width="2"/><path d="M29 56 96 94 96 174 29 136Z" fill="url(#hmCubeLeft)" stroke="#d8ceff" stroke-opacity=".52" stroke-width="2"/><path d="M163 56 96 94 96 174 163 136Z" fill="url(#hmCubeRight)" stroke="#c5f9ff" stroke-opacity=".65" stroke-width="2"/><path d="m48 67 30 17v12L48 79Zm0 27 30 17v12L48 106Zm0 27 30 17v12L48 133Z" fill="#dcd4ff" fill-opacity=".35"/><path d="m113 82 30-17v12l-30 17Zm0 27 30-17v12l-30 17Zm0 27 30-17v12l-30 17Z" fill="#e2fcff" fill-opacity=".43"/><path d="m96 18 0 76" stroke="#fff" stroke-opacity=".48"/><circle cx="96" cy="54" r="8" fill="#fff" fill-opacity=".72" filter="url(#hmGlow)"/></svg></div></div><div class="hm-entry-bottom"><div class="hm-entry-status" id="hmEntryStatus">Открываем HypeMine Builds</div><div class="hm-entry-track" aria-hidden="true"><span id="hmEntryProgress"></span></div></div></div></div>
 
 
 
-<canvas id="galaxyCanvas"></canvas>
+<script>
+(function(){
+ let dismissed=false,tick=0,fallback=0;
+ window.dismissHmEntry=function(){
+  if(dismissed)return;dismissed=true;clearInterval(tick);clearTimeout(fallback);
+  const loader=document.getElementById("hmEntryLoader");if(!loader)return;
+  const progress=document.getElementById("hmEntryProgress");if(progress)progress.style.width="100%";
+  loader.classList.add("hm-entry-leaving");document.body.classList.remove("hm-entry-active");
+  setTimeout(()=>loader.remove(),380);
+ };
+ const loader=document.getElementById("hmEntryLoader");if(!loader)return;
+ document.body.classList.add("hm-entry-active");
+ const started=performance.now(),progress=document.getElementById("hmEntryProgress");
+ tick=setInterval(()=>{if(!progress)return;const pct=Math.min(88,8+(performance.now()-started)/58);progress.style.width=pct+"%";},70);
+ fallback=setTimeout(window.dismissHmEntry,8000);
+ window.addEventListener("load",()=>setTimeout(window.dismissHmEntry,900),{once:true});
+})();
+</script><canvas id="galaxyCanvas"></canvas>
 <div id="hmAmbient" class="hm-ambient" aria-hidden="true"><div class="hm-ambient-stars"></div><div class="hm-ambient-glow a"></div><div class="hm-ambient-glow b"></div><div class="hm-ambient-glow c"></div><div class="hm-ambient-ribbon"></div></div>
 
 <div id="seasonParticles" class="season-particles"></div>
@@ -10792,9 +10834,7 @@ renderMusic();
 
 applyAmbientStyle();
 
-let hmEntryStartedAt=0,hmEntryTick=null,hmEntryTimeout=null;
-function dismissHmEntry(){const e=document.getElementById("hmEntryLoader");if(!e)return;if(hmEntryTick)clearInterval(hmEntryTick);if(hmEntryTimeout)clearTimeout(hmEntryTimeout);const p=document.getElementById("hmEntryProgress"),n=document.getElementById("hmEntryPct");if(p)p.style.width="100%";if(n)n.textContent="100%";e.classList.add("hm-entry-leaving");document.body.classList.remove("hm-entry-active");setTimeout(()=>e.remove(),650)}
-(function startHmEntry(){const e=document.getElementById("hmEntryLoader");if(!e)return;document.body.classList.add("hm-entry-active");hmEntryStartedAt=Date.now();hmEntryTick=setInterval(()=>{const t=Math.min(96,Math.floor((Date.now()-hmEntryStartedAt)/625));const p=document.getElementById("hmEntryProgress"),n=document.getElementById("hmEntryPct");if(p)p.style.width=(Math.max(3,t))+"%";if(n)n.textContent=String(Math.max(3,t)).padStart(2,"0")+"%";},35);hmEntryTimeout=setTimeout(dismissHmEntry,60000)})();
+
 </script>
 
 
