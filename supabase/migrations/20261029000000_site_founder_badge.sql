@@ -59,7 +59,7 @@ grant execute on function public.is_site_founder() to authenticated;
 -- Public optimized profile photos. Upload is restricted to the signed-in user's
 -- own folder (auth.uid()); the public bucket allows rendering avatar URLs.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('hm-avatars', 'hm-avatars', true, 2097152, array['image/webp','image/jpeg'])
+values ('hm-avatars', 'hm-avatars', true, 10485760, array['image/webp','image/jpeg','image/png','image/gif','image/avif','image/apng','video/mp4'])
 on conflict (id) do update set
   public = excluded.public,
   file_size_limit = excluded.file_size_limit,
